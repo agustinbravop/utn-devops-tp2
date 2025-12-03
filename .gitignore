@@ -1,0 +1,9 @@
+# dependencies and outputs
+node_modules/
+dist/
+coverage/
+.vscode/
+
+# env files
+.env
+.secrets
