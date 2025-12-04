@@ -36,8 +36,6 @@ services:
     environment:
       RI_REDIS_HOST_LOCAL: redis
       RI_REDIS_PORT_LOCAL: 6379
-      RI_REDIS_HOST_PROD: shuttle.proxy.rlwy.net # URL de Railway
-      RI_REDIS_PORT_PROD: 25226
     depends_on:
       - redis
 

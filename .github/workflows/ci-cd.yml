@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
@@ -73,7 +73,7 @@ jobs:
         id: meta-backend
         uses: docker/metadata-action@v4
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/devops-practice-backend
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/utn-devops-tp2-backend
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -108,7 +108,7 @@ jobs:
         id: meta-frontend
         uses: docker/metadata-action@v4
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/devops-practice-frontend
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/utn-devops-tp2-frontend
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -122,22 +122,3 @@ jobs:
           push: true
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}
-          build-args: |
-            VITE_API_URL=https://backend-production-ced8.up.railway.app/api
-
-  deploy-railway:
-    needs: [build-backend, build-frontend]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-
-      - name: Deploy backend to Railway
-        run: railway redeploy --service backend -y
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-
-      - name: Deploy frontend to Railway
-        run: railway redeploy --service frontend -y
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}

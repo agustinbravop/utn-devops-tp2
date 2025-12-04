@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-insight
+  namespace: app
+  labels:
+    app: redis-insight
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-insight
+  template:
+    metadata:
+      labels:
+        app: redis-insight
+    spec:
+      containers:
+        - name: redis-insight
+          image: redis/redisinsight:latest
+          ports:
+            - containerPort: 5540
+          env:
+            - name: RI_REDIS_HOST
+              value: redis.app.svc.cluster.local
+            - name: RI_REDIS_PORT
+              value: "6379"
+            - name: RI_APP_PORT
+              value: "5540"
+          volumeMounts:
+            - name: redis-insight-data
+              mountPath: /data
+      volumes:
+        - name: redis-insight-data
+          emptyDir: {}

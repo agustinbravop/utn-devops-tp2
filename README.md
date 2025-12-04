@@ -11,11 +11,9 @@ Bienvenido al repositorio del trabajo práctico 2 del cursado 2025 de DevOps, re
 
 Links relevantes:
 
-- [Sitio web](https://frontend-production-842c.up.railway.app/).
-- [Railway](https://railway.com/project/8a1229ac-af24-48f2-b711-544234bb788b/service/1dc4995f-f778-4f16-9999-ef4b26b8d356/variables?environmentId=81679781-80b7-40e0-8b3d-4e992e4dbd8e).
+- [Sitio web](http://20.42.47.137:30080).
 - [Repositorio](https://github.com/agustinbravop/utn-devops-tp2).
-- [Presentación](https://docs.google.com/presentation/d/1Oeib-6iJBH1CDKIbkvpxfdh1EuLlGJWqte_1BYEEv3M/edit).
-- [Consigna](https://docs.google.com/document/d/1t88Qv7iCp90YzHOi2W8MfY7bfFoTcjVz1UkCZPzs84c/edit?tab=t.0).
+- [Consigna](https://docs.google.com/document/d/17rKVSd9DzsR-YAgXfACUqy_Jh-U3UC44XM7zMcwFb14/edit?tab=t.0).
 
 ## ✨ Aplicación: Lista de Tareas
 
@@ -38,15 +36,15 @@ graph LR
 Flujo de datos:
 
 1. El usuario interactúa con la UI (frontend).
-2. React envía peticiones a la API REST (backend).
+2. React hace peticiones a la API REST (backend).
 3. El backend procesa las peticiones y envía peticiones a Redis.
 4. Redis responde las peticiones del backend, quien luego responde al frontend.
 
 ## 📂 Estructura del Proyecto
 
 ```yaml
-devops-practice
-├── .github          # Definición de la GitHub Action
+utn-devops-tp2
+├── .github          # Definición de la GitHub Actions
 ├── backend          # Servidor backend con TypeScript y Express.js
 │   ├── package.json
 │   └── Dockerfile
@@ -69,13 +67,13 @@ Requisitos para levantar el proyecto:
 
    ```bash
    git clone https://github.com/agustinbravop/utn-devops-tp2.git
-   cd devops-practice
+   cd utn-devops-tp2
    ```
 
 2. Construir y ejecutar la aplicación usando Docker Compose:
 
    ```bash
-   docker compose up --build
+   docker compose up
    ```
 
 3. Visitar la UI en `http://localhost:3000` y la API en `http://localhost:3001`.
@@ -95,54 +93,21 @@ Se pueden definir las siguientes variables de entorno:
   PORT=80
   ```
 
-## 🚀 Despliegue
-
-Se utiliza [Railway](https://railway.com) para desplegar la aplicación.
-Se creó un proyecto `devops-practice`.
-
-Con los siguientes comandos interactivos se crean tres servicios `frontend`, `backend` y `redis`:
-
-```bash
-railway login
-railway link
-
-railway add -s backend \
-   -i agustinbravop/devops-practice-backend:latest \
-   -v "REDIS_URL=redis://redis:6379?family=6" \
-   -v "PORT=80"
-```
-
-Es necesario ir manualmente al servicio `backend` y generar una URL para habilitarlo al público.
-Esa URL `https://backend-production-ced8.up.railway.app` luego se pone en el paso `build-frontend` de la GitHub Action como el argumento `VITE_API_URL` agregando un `/api` al final.
-Esto es necesario porque Vite compila la aplicación al momento de construir la imagen y no procesa variables de entorno en tiempo de ejecución.
-Existen workarounds para esto pero en este caso se prefirió mantener una solución simple.
-
-```bash
-railway add -s frontend \
-   -i agustinbravop/devops-practice-frontend:latest
-
-railway add -s redis \
-   -i redis:7-alpine
-```
-
-Luego se necesita manualmente habilitar al público los servicios `frontend` y `backend`.
-También es necesario en ambos servicios habilitar los redespliegues automáticos cuando se actualiza la imagen con etiqueta `latest`.
-Esto no resultó simple de automatizar, demostrando un inconveniente de Railway: prioriza la experiencia de la GUI por sobre la CLI.
+## 🚀 Despliegue (TP 1)
 
 Se tiene una GitHub Action para el despliegue.
-Esta GitHub Action requiere las siguientes variables y secrets:
+Esta GitHub Action requiere los siguientes GitHub Actions Repository Secrets:
 
 ```
 DOCKERHUB_USERNAME=
 DOCKERHUB_TOKEN=
-RAILWAY_TOKEN=
 ```
 
 Pasos de un despliegue al hacer un `git push`:
 
 1. GitHub Actions ejecuta todos los pasos de integración continua.
 2. GitHub Actions construye las imágenes de contenedores y las publica en Docker Hub.
-3. GitHub Actions notifica a Railway para redesplegar los servicios, lo cual descarga la imagen nueva de Docker Hub.
+3. PENDIENTE: GitHub Actions notifica al cluster de Kubernetes para redesplegar los servicios, lo cual descarga la imagen nueva de Docker Hub.
 
 ```mermaid
 graph LR
@@ -159,7 +124,7 @@ graph LR
 
     PUSH[Docker Hub]
 
-    subgraph "Producción en Railway"
+    subgraph "Producción en Kubernetes"
             RF[Frontend]
             RB[Backend]
             RR[Redis]
@@ -197,7 +162,7 @@ Existen recursos que se deben crear manualmente mediante la CLI de Azure:
 ```bash
 # Previamente se debe haber instalado Azure CLI.
 # Ver: https://learn.microsoft.com/en-us/cli/azure/install-azure-cli.
-# Ejemplo: brew install azure-cli
+#     brew install azure-cli
 
 # Iniciar sesión con el correo académico y elegir la suscripción "Azure para estudiantes".
 az login
@@ -227,10 +192,9 @@ az vm create \
   --admin-username azureuser \
   --generate-ssh-keys
 
-# Abrir puertos para la API de Kubernetes y el supervisor de k3s.
-for VM in $SERVER_VM $AGENT_VM; do
-  az vm open-port --resource-group $RESOURCE_GROUP --name $VM --port 6443,10250
-done
+# Abrir puertos para el frontend, el redis insight, la API de Kubernetes y el supervisor de k3s.
+az vm open-port --resource-group $RESOURCE_GROUP --name $SERVER_VM --port 6443,10250
+az vm open-port --resource-group $RESOURCE_GROUP --name $AGENT_VM --port 30080,30540,6443,10250
 
 # Instalar k3s en el server (--tls-san se usa para permitir el acceso mediante la IP pública).
 SERVER_PUBLIC_IP=$(az vm show --name $SERVER_VM --resource-group $RESOURCE_GROUP --show-details --query "publicIps" --output tsv)
@@ -265,9 +229,9 @@ Una vez creadas las máquinas virtuales e instalado k3s, necesitamos conectarnos
 ```bash
 # Previamente se debe haber instalado `kubectl`, la CLI de Kubernetes.
 # Ver: https://kubernetes.io/docs/tasks/tools/#kubectl.
-# Ejemplo: brew install kubectl
+#     brew install kubectl
 
-# Obtener el archivo kubeconfig del server  (asociado al superusuario admin).
+# Obtener el archivo kubeconfig del server (asociado al superusuario admin).
 az vm run-command invoke \
     --resource-group $RESOURCE_GROUP \
     --name $SERVER_VM \
@@ -282,7 +246,7 @@ az vm run-command invoke \
 
 # Probar la conexión al cluster recién creado.
 export KUBECONFIG=kubeconfig.yaml
-kubectl cluster-info
+kubectl get nodes
 ```
 
 Para eliminar todos los recursos creados:
@@ -291,16 +255,19 @@ Para eliminar todos los recursos creados:
 az group delete --name $RESOURCE_GROUP --yes
 ```
 
+## 🚀 Despliegue
+
+En la carpeta `/k8s` se definen manifiestos de recursos de Kubernetes a desplegar.
+
 ## ⚒️ Tareas Pendientes
 
 Esta lista NO es exhaustiva!
 
-- [x] Provisionar un cluster de Kubernetes en Microsoft Azure.
-- [ ] Corregir el despliegue continuo de la aplicación base.
+- [x] Instalar un cluster de Kubernetes con k3s en Microsoft Azure.
+- [ ] Implementar despliegue continuo de la aplicación base.
 - [ ] Exponer una acción que genere carga controlada.
-- [ ] Instalar un cluster de Kubernetes con k3s.
-- [ ] Desplegar la app y Redis en Pods (utilizar un Deployment).
-- [ ] Desplegar un servicio o ingress para exponer a la web.
+- [x] Desplegar los servicios en Pods (conviene utilizar un Deployment).
+- [x] Desplegar un servicio o ingress para exponer a la web.
 - [ ] Configurar alta disponibilidad para que se levanten nuevos nodos conforme aumenta la carga de la app.
 - [ ] Emitir logs structurados en cada servicio de la app.
 - [ ] Implementar OpenTelemetry para trazas.
@@ -308,4 +275,5 @@ Esta lista NO es exhaustiva!
 - [ ] En las métricas, tener al menos un indicador de contenedor y un indicador de la aplicación.
 - [ ] Implementar Grafana para visualización con gráficos y paneles.
 - [ ] Opcional: implementar IaC con Terraform para aprovisionar un cluster de Kubernetes.
-- [ ] Opcional: agregar un servicio extra a la app para analizar trazas más interesantes.
+- [ ] Opcional: agregar un servicio extra a la app para analizar trazas más complejas.
+- [ ] Opcional: exponar la aplicación en un dominio (evitando así la URL HTTP cruda).
