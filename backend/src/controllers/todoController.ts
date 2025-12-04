@@ -1,18 +1,23 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import Redis from "ioredis";
 
-let client = new Redis(process.env.REDIS_URL || "redis://localhost:6379");
+type TaskStatus = "pendiente" | "completada";
 
-export const getTasks = async (_req: Request, res: Response) => {
-  const redisClient = client;
+const redisClient = new Redis(
+  process.env.REDIS_URL ?? "redis://localhost:6379"
+);
+
+export const getTasks = async (_req: Request, res: Response): Promise<void> => {
   try {
     const taskKeys = await redisClient.keys("task:*");
 
     if (taskKeys.length === 0) {
-      return res
-        .status(200)
-        .json({ message: "No se encontraron tareas.", tasks: [] });
+      res.status(200).json({ message: "No se encontraron tareas.", tasks: [] });
+      return;
     }
 
     const tasksPromises = taskKeys.map(async (key: string) => {
@@ -21,7 +26,7 @@ export const getTasks = async (_req: Request, res: Response) => {
       return {
         id: taskData.id,
         title: taskData.title,
-        status: taskData.status as "pendiente" | "completada",
+        status: taskData.status as TaskStatus,
       };
     });
 
@@ -30,27 +35,35 @@ export const getTasks = async (_req: Request, res: Response) => {
     res.status(200).json({ message: "Tareas obtenidas exitosamente.", tasks });
   } catch (error) {
     console.error("Error al obtener tareas:", error);
-    res.status(500).json({ message: "Error interno del servidor.", error });
+    res.status(500).json({
+      message: "Error interno del servidor.",
+      error: (error as Error).message,
+    });
   }
 };
 
-export const createTask = async (req: Request, res: Response) => {
-  const redisClient = client;
+export const createTask = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { title } = req.body;
 
-    if (!title) {
-      return res
+    if (!title || typeof title !== "string") {
+      res
         .status(400)
-        .json({ message: "El título de la tarea es requerido." });
+        .json({
+          message: "El título de la tarea es requerido y debe ser texto.",
+        });
+      return;
     }
 
     const taskId = uuidv4();
     const newTaskKey = `task:${taskId}`;
     const task = {
       id: taskId,
-      title: title,
-      status: "pendiente",
+      title: title.trim(),
+      status: "pendiente" as TaskStatus,
     };
 
     await redisClient.hset(newTaskKey, task);
@@ -58,28 +71,35 @@ export const createTask = async (req: Request, res: Response) => {
     res.status(201).json({ message: "Tarea creada exitosamente.", task });
   } catch (error) {
     console.error("Error al crear la tarea:", error);
-    res.status(500).json({ message: "Error interno del servidor.", error });
+    res.status(500).json({
+      message: "Error interno del servidor.",
+      error: (error as Error).message,
+    });
   }
 };
 
-export const updateTaskStatus = async (req: Request, res: Response) => {
-  const redisClient = client;
+export const updateTaskStatus = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!status || (status !== "pendiente" && status !== "completada")) {
-      return res.status(400).json({
+    if (status !== "pendiente" && status !== "completada") {
+      res.status(400).json({
         message:
           'El estado de la tarea es inválido. Debe ser "pendiente" o "completada".',
       });
+      return;
     }
 
     const taskKey = `task:${id}`;
 
     const taskExists = await redisClient.exists(taskKey);
     if (taskExists === 0) {
-      return res.status(404).json({ message: "Tarea no encontrada." });
+      res.status(404).json({ message: "Tarea no encontrada." });
+      return;
     }
 
     await redisClient.hset(taskKey, "status", status);
@@ -92,12 +112,17 @@ export const updateTaskStatus = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error al actualizar la tarea:", error);
-    res.status(500).json({ message: "Error interno del servidor.", error });
+    res.status(500).json({
+      message: "Error interno del servidor.",
+      error: (error as Error).message,
+    });
   }
 };
 
-export const deleteTask = async (req: Request, res: Response) => {
-  const redisClient = client;
+export const deleteTask = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
 
@@ -105,7 +130,8 @@ export const deleteTask = async (req: Request, res: Response) => {
 
     const taskExists = await redisClient.exists(taskKey);
     if (taskExists === 0) {
-      return res.status(404).json({ message: "Tarea no encontrada." });
+      res.status(404).json({ message: "Tarea no encontrada." });
+      return;
     }
 
     await redisClient.del(taskKey);
@@ -116,17 +142,86 @@ export const deleteTask = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error al eliminar la tarea:", error);
-    res.status(500).json({ message: "Error interno del servidor.", error });
+    res.status(500).json({
+      message: "Error interno del servidor.",
+      error: (error as Error).message,
+    });
   }
 };
 
-export const testear = async (req: Request, res: Response) => {
-  const { num1, num2 } = req.body;
+export const testear = async (req: Request, res: Response): Promise<void> => {
   try {
-    const result = num1 + num2;
-    res.status(200).json(result);
+    const { num1, num2 } = req.body;
+
+    const a = Number(num1);
+    const b = Number(num2);
+
+    if (Number.isNaN(a) || Number.isNaN(b)) {
+      res.status(400).json({
+        message: "num1 y num2 deben ser numéricos.",
+      });
+      return;
+    }
+
+    const result = a + b;
+    res.status(200).json({ result });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: error });
+    console.error("Error en testear:", error);
+    res.status(500).json({
+      message: "Error interno del servidor.",
+      error: (error as Error).message,
+    });
+  }
+};
+
+/**
+ * Genera carga controlada sobre Redis creando varias tareas "dummy".
+ * Pensado para enganchar a un botón sutil en el front.
+ *
+ * - iterations: opcional en el body, número de operaciones (1–200). Default: 50.
+ * - Las tareas creadas se identifican como "task:loadtest:<uuid>:<i>"
+ *   y se les puede asociar un TTL para no ensuciar la DB.
+ */
+export const generateControlledLoad = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const rawIterations = req.body?.iterations;
+    let iterations = 50;
+
+    if (typeof rawIterations === "number") {
+      iterations = Math.min(Math.max(rawIterations, 1), 200);
+    }
+
+    const loadTestId = uuidv4();
+    const pipeline = redisClient.pipeline();
+
+    for (let i = 0; i < iterations; i++) {
+      const key = `task:loadtest:${loadTestId}:${i}`;
+      const task = {
+        id: `${loadTestId}-${i}`,
+        title: `Tarea de carga controlada #${i + 1}`,
+        status: "pendiente" as TaskStatus,
+      };
+
+      pipeline.hset(key, task);
+      // Opcional: expirar estas tareas después de 10 minutos
+      pipeline.expire(key, 600);
+    }
+
+    await pipeline.exec();
+
+    res.status(201).json({
+      message: "Carga controlada generada exitosamente.",
+      iterations,
+      loadTestId,
+    });
+  } catch (error) {
+    console.error("Error al generar carga controlada:", error);
+    res.status(500).json({
+      message: "Error interno del servidor.",
+      error: (error as Error).message,
+    });
   }
 };

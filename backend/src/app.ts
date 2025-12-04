@@ -1,18 +1,18 @@
-import express from "express";
-import taskRoutes from "./routes/todoRoutes";
-import cors from "cors";
 import dotenv from "dotenv";
 import client from "prom-client";
 import metricsMiddleware from "./middleware/metricsMiddleware";
+import express from "express";
+import cors from "cors";
+import taskRoutes from "./routes/todoRoutes";
 
 const app = express();
 
-// Middlewares
+// Middlewares.
 app.use(cors());
 app.use(express.json());
 app.use(metricsMiddleware);
 
-// Prometheus metrics endpoint
+// Prometheus metrics endpoint.
 app.get("/api/metrics", async (_req, res) => {
   res.set("Content-Type", client.register.contentType);
   res.end(await client.register.metrics());
@@ -20,9 +20,9 @@ app.get("/api/metrics", async (_req, res) => {
 
 app.use("/api", taskRoutes);
 
-// Only start the server if this file is run directly
-if (process.argv[1] && process.argv[1].endsWith("app.ts")) {
-  // read from .env file
+// Solo iniciar el servidor si este archivo se ejecuta directamente.
+if (process.argv[1] && /app\.(ts|js)$/.test(process.argv[1])) {
+  // read from .env file.
   dotenv.config();
   const PORT = Number(process.env.PORT) || 3001;
 
