@@ -57,7 +57,7 @@ utn-devops-tp2
 └── README.md
 ```
 
-## 🧑‍💻 Desarrollo
+## 💻 Desarrollo
 
 Requisitos para levantar el proyecto:
 
@@ -203,12 +203,16 @@ Se puede acceder al cluster utilizando el archivo `kubeconfig.yaml` generado ant
 En el cluster se despliega la aplicación utilizando los manifiestos definidos en la carpeta `/k8s`.
 También se despliegan otros servicios, como Prometheus y Grafana.
 
+```bash
+kubectl apply -k k8s/app
+```
+
 ## 🚀 Despliegue Continuo
 
 Se tiene una GitHub Action para la integración continua y despliegue continuo.
 Este workflow requiere los siguientes Repository Secrets:
 
-```
+```bash
 DOCKERHUB_USERNAME
 DOCKERHUB_TOKEN
 KUBECONFIG_BASE64
@@ -273,7 +277,7 @@ Esta lista NO es exhaustiva!
 - [ ] Exponer una acción que genere carga controlada.
 - [x] Desplegar los servicios en Pods (conviene utilizar un Deployment).
 - [x] Desplegar un servicio o ingress para exponer a la web.
-- [ ] Configurar alta disponibilidad para que se levanten nuevos nodos conforme aumenta la carga de la app.
+- [x] Configurar alta disponibilidad para que se levanten nuevos nodos conforme aumenta la carga de la app.
 - [ ] Emitir logs structurados en cada servicio de la app.
 - [ ] Implementar OpenTelemetry para trazas.
 - [ ] Implementar Prometheus para métricas.
@@ -281,5 +285,5 @@ Esta lista NO es exhaustiva!
 - [ ] Implementar Grafana para visualización con gráficos y paneles.
 - [ ] Opcional: implementar IaC con Terraform para aprovisionar un cluster de Kubernetes.
 - [ ] Opcional: agregar un servicio extra a la app para analizar trazas más complejas.
-- [ ] Opcional: exponar la aplicación en un dominio (evitando así la URL HTTP cruda).
+- [ ] Opcional: exponer la aplicación en un dominio (evitando así la URL HTTP cruda).
 - [ ] Opcional: redesplegar servicios SOLO cuando se rebuildea su imagen. Rebuildear imágenes SOLO si cambia el código fuente de ese servicio.
