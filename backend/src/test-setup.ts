@@ -1,4 +1,5 @@
 import Redis from "ioredis";
+import client from "prom-client";
 
 // Mock Redis client
 jest.mock("ioredis");
@@ -35,4 +36,5 @@ export const mockRedis = {
 // Reset all mocks before each test
 beforeEach(() => {
   jest.clearAllMocks();
+  client.register.resetMetrics();
 });
