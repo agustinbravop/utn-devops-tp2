@@ -12,16 +12,20 @@ COPY package-lock.json ./
 
 RUN npm install
 
-ARG VITE_API_URL=http://localhost:3001/api
-ENV VITE_API_URL=$VITE_API_URL
+# Placeholder value will be replaced at runtime in entrypoint.sh.
+ENV VITE_API_URL=__VITE_API_URL__
 
 RUN npm run build
 
-# Levantar el servidor web
+# Levantar el servidor web.
 FROM nginx:stable-alpine
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+COPY entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
 
 EXPOSE 80
