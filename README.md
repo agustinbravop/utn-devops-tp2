@@ -134,7 +134,7 @@ az vm create \
 
 # Abrir puertos para el frontend, el redis insight, la API de Kubernetes y el supervisor de k3s.
 az vm open-port --resource-group $RESOURCE_GROUP --name $SERVER_VM --port 6443,10250
-az vm open-port --resource-group $RESOURCE_GROUP --name $AGENT_VM --port 30080,30540,6443,10250
+az vm open-port --resource-group $RESOURCE_GROUP --name $AGENT_VM --port 80,30540,6443,10250
 
 # Instalar k3s en el server (--tls-san se usa para permitir el acceso mediante la IP pública).
 SERVER_PUBLIC_IP=$(az vm show --name $SERVER_VM --resource-group $RESOURCE_GROUP --show-details --query "publicIps" --output tsv)
