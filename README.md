@@ -1,5 +1,5 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/28058df562244e0db8beceaa1a88d0bf)](https://app.codacy.com/gh/agustinbravop/utn-devops-tp2/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-![Workflow Badge](https://github.com/agustinbravop/utn-devops-tp2/actions/workflows/ci.yml/badge.svg)
+![Workflow Badge](https://github.com/agustinbravop/utn-devops-tp2/actions/workflows/ci-cd.yml/badge.svg)
 
 # 🧩 DevOps: Trabajo Práctico 2
 
@@ -92,66 +92,6 @@ Se pueden definir las siguientes variables de entorno:
   REDIS_URL=redis://localhost:6379
   PORT=80
   ```
-
-## 🚀 Despliegue (TP 1)
-
-Se tiene una GitHub Action para el despliegue.
-Esta GitHub Action requiere los siguientes GitHub Actions Repository Secrets:
-
-```
-DOCKERHUB_USERNAME=
-DOCKERHUB_TOKEN=
-```
-
-Pasos de un despliegue al hacer un `git push`:
-
-1. GitHub Actions ejecuta todos los pasos de integración continua.
-2. GitHub Actions construye las imágenes de contenedores y las publica en Docker Hub.
-3. PENDIENTE: GitHub Actions notifica al cluster de Kubernetes para redesplegar los servicios, lo cual descarga la imagen nueva de Docker Hub.
-
-```mermaid
-graph LR
-    subgraph "Desarrollo"
-        DEV[Dev]
-        GIT[Repositorio<br/>GitHub]
-    end
-
-    subgraph "Pipeline CI/CD"
-        GA[Integración<br/>continua]
-        BUILD[Construir imagenes<br/> y pushear a<br/>Docker Hub]
-        REDEPLOY[Redeploy]
-    end
-
-    PUSH[Docker Hub]
-
-    subgraph "Producción en Kubernetes"
-            RF[Frontend]
-            RB[Backend]
-            RR[Redis]
-    end
-
-    %% Deployment flow
-    DEV -->|git push| GIT
-    GIT --> GA
-    GA -->|build| BUILD
-    BUILD -->|push| PUSH
-    BUILD --> REDEPLOY
-    REDEPLOY -->|redeploy| RF
-    REDEPLOY -->|redeploy| RB
-    RF -.->|pull latest| PUSH
-    RB -.->|pull latest| PUSH
-
-    %% Styling
-    classDef dockerhub fill:#0ea5e9,stroke:#0284c7,stroke-width:2px,color:#ffffff
-    classDef cicd fill:#8b5cf6,stroke:#7c3aed,stroke-width:2px,color:#ffffff
-    classDef production fill:#10b981,stroke:#059669,stroke-width:2px,color:#ffffff
-    classDef development fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#ffffff
-
-    class DEV,GIT development
-    class GA,BUILD,REDEPLOY cicd
-    class RF,RB,RR production
-    class PUSH dockerhub
-```
 
 ## 🏗️ Infraestructura
 
@@ -255,16 +195,81 @@ Para eliminar todos los recursos creados:
 az group delete --name $RESOURCE_GROUP --yes
 ```
 
-## 🚀 Despliegue
+## ⚓️ Kubernetes
 
-En la carpeta `/k8s` se definen manifiestos de recursos de Kubernetes a desplegar.
+El resto de servicios se despliegan sobre el cluster de Kubernetes, por lo que nos abstraemos de Microsoft Azure.
+Se puede acceder al cluster utilizando el archivo `kubeconfig.yaml` generado anteriormente.
+
+En el cluster se despliega la aplicación utilizando los manifiestos definidos en la carpeta `/k8s`.
+También se despliegan otros servicios, como Prometheus y Grafana.
+
+## 🚀 Despliegue Continuo
+
+Se tiene una GitHub Action para la integración continua y despliegue continuo.
+Este workflow requiere los siguientes Repository Secrets:
+
+```
+DOCKERHUB_USERNAME
+DOCKERHUB_TOKEN
+KUBECONFIG_BASE64
+```
+
+Pasos de un despliegue al hacer un `git push`:
+
+1. GitHub Actions ejecuta todos los pasos de integración continua.
+2. GitHub Actions construye las imágenes de contenedores y las publica en Docker Hub.
+3. GitHub Actions se conecta al cluster de Kubernetes para redesplegar los servicios, quienes descargan la nueva imagen de Docker Hub.
+
+```mermaid
+graph LR
+    subgraph "Desarrollo"
+        DEV[Dev]
+        GIT[Repositorio<br/>GitHub]
+    end
+
+    subgraph "Pipeline CI/CD"
+        GA[Integración<br/>continua]
+        BUILD[Construir imagenes<br/> y pushear a<br/>Docker Hub]
+        REDEPLOY[Redeploy]
+    end
+
+    PUSH[Docker Hub]
+
+    subgraph "Producción en Kubernetes"
+            RF[Frontend]
+            RB[Backend]
+            RR[Redis]
+    end
+
+    %% Deployment flow
+    DEV -->|git push| GIT
+    GIT --> GA
+    GA -->|build| BUILD
+    BUILD -->|push| PUSH
+    BUILD --> REDEPLOY
+    REDEPLOY -->|rollout restart| RF
+    REDEPLOY -->|rollout restart| RB
+    RF -.->|pull latest| PUSH
+    RB -.->|pull latest| PUSH
+
+    %% Styling
+    classDef dockerhub fill:#0ea5e9,stroke:#0284c7,stroke-width:2px,color:#ffffff
+    classDef cicd fill:#8b5cf6,stroke:#7c3aed,stroke-width:2px,color:#ffffff
+    classDef production fill:#10b981,stroke:#059669,stroke-width:2px,color:#ffffff
+    classDef development fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#ffffff
+
+    class DEV,GIT development
+    class GA,BUILD,REDEPLOY cicd
+    class RF,RB,RR production
+    class PUSH dockerhub
+```
 
 ## ⚒️ Tareas Pendientes
 
 Esta lista NO es exhaustiva!
 
 - [x] Instalar un cluster de Kubernetes con k3s en Microsoft Azure.
-- [ ] Implementar despliegue continuo de la aplicación base.
+- [x] Implementar despliegue continuo de la aplicación base.
 - [ ] Exponer una acción que genere carga controlada.
 - [x] Desplegar los servicios en Pods (conviene utilizar un Deployment).
 - [x] Desplegar un servicio o ingress para exponer a la web.
@@ -277,3 +282,4 @@ Esta lista NO es exhaustiva!
 - [ ] Opcional: implementar IaC con Terraform para aprovisionar un cluster de Kubernetes.
 - [ ] Opcional: agregar un servicio extra a la app para analizar trazas más complejas.
 - [ ] Opcional: exponar la aplicación en un dominio (evitando así la URL HTTP cruda).
+- [ ] Opcional: redesplegar servicios SOLO cuando se rebuildea su imagen. Rebuildear imágenes SOLO si cambia el código fuente de ese servicio.

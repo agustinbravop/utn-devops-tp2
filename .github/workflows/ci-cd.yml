@@ -122,3 +122,30 @@ jobs:
           push: true
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}
+
+  redeploy:
+    needs:
+      - build-backend
+      - build-frontend
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    env:
+      KUBECONFIG: ${{ github.workspace }}/kubeconfig
+    steps:
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: v1.28.0
+
+      - name: Configure kubeconfig
+        env:
+          KUBECONFIG_BASE64: ${{ secrets.KUBECONFIG_BASE64 }}
+        run: |
+          echo "$KUBECONFIG_BASE64" | base64 --decode > "$KUBECONFIG"
+
+      - name: Rollout restart deployments
+        run: |
+          kubectl -n app rollout restart deployment backend
+          kubectl -n app rollout status deployment backend
+          kubectl -n app rollout restart deployment frontend
+          kubectl -n app rollout status deployment frontend
