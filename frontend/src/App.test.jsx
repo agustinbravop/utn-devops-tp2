@@ -47,7 +47,7 @@ describe("App Component", () => {
     await waitFor(() => {
       expect(screen.getByText("No tasks yet")).toBeInTheDocument();
       expect(
-        screen.getByText("Add your first task to get started!"),
+        screen.getByText("Add your first task to get started!")
       ).toBeInTheDocument();
     });
   });
@@ -88,7 +88,7 @@ describe("App Component", () => {
 
     expect(mockedAxios.post).toHaveBeenCalledWith(
       "http://localhost:3001/api/tasks",
-      { title: "New task" },
+      { title: "New task" }
     );
   });
 
@@ -130,7 +130,7 @@ describe("App Component", () => {
 
     expect(mockedAxios.put).toHaveBeenCalledWith(
       "http://localhost:3001/api/tasks/1",
-      { status: "completada" },
+      { status: "completada" }
     );
   });
 
@@ -151,7 +151,7 @@ describe("App Component", () => {
     await user.click(deleteButtons[0]);
 
     expect(mockedAxios.delete).toHaveBeenCalledWith(
-      "http://localhost:3001/api/tasks/1",
+      "http://localhost:3001/api/tasks/1"
     );
   });
 
@@ -220,7 +220,7 @@ describe("App Component", () => {
     await waitFor(() => {
       expect(consoleSpy).toHaveBeenCalledWith(
         "Error fetching tasks:",
-        expect.any(Error),
+        expect.any(Error)
       );
     });
 

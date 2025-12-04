@@ -7,19 +7,21 @@ function App() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isGeneratingLoad, setIsGeneratingLoad] = useState(false);
 
   useEffect(() => {
     const fetchTasks = async () => {
       try {
         setIsLoading(true);
         const result = await axios.get(`${API_URL}/tasks`);
-        setTasks(result.data.tasks);
+        setTasks(result.data.tasks ?? []);
       } catch (error) {
         console.error("Error fetching tasks:", error);
       } finally {
         setIsLoading(false);
       }
     };
+
     fetchTasks();
   }, []);
 
@@ -30,7 +32,9 @@ function App() {
     try {
       setIsLoading(true);
       const res = await axios.post(`${API_URL}/tasks`, { title: newTask });
-      setTasks([...tasks, res.data.task]);
+      if (res.data?.task) {
+        setTasks((prev) => [...prev, res.data.task]);
+      }
       setNewTask("");
     } catch (error) {
       console.error("Error creating task:", error);
@@ -42,7 +46,11 @@ function App() {
   const handleStatusChange = async (id, status) => {
     try {
       const res = await axios.put(`${API_URL}/tasks/${id}`, { status });
-      setTasks(tasks.map((task) => (task.id === id ? res.data.task : task)));
+      if (res.data?.task) {
+        setTasks((prev) =>
+          prev.map((task) => (task.id === id ? res.data.task : task))
+        );
+      }
     } catch (error) {
       console.error("Error updating task:", error);
     }
@@ -51,9 +59,24 @@ function App() {
   const handleDeleteTask = async (id) => {
     try {
       await axios.delete(`${API_URL}/tasks/${id}`);
-      setTasks(tasks.filter((task) => task.id !== id));
+      setTasks((prev) => prev.filter((task) => task.id !== id));
     } catch (error) {
       console.error("Error deleting task:", error);
+    }
+  };
+
+  // Botón sutil: genera carga controlada en el backend
+  const handleGenerateControlledLoad = async () => {
+    try {
+      setIsGeneratingLoad(true);
+      await axios.post(`${API_URL}/tasks/generate-load`, {
+        iterations: 50,
+      });
+      // Intencionalmente no recargamos tareas para no “ensuciar” la UI
+    } catch (error) {
+      console.error("Error generating controlled load:", error);
+    } finally {
+      setIsGeneratingLoad(false);
     }
   };
 
@@ -83,6 +106,21 @@ function App() {
             {isLoading ? "Adding..." : "Add Task"}
           </button>
         </form>
+
+        {/* Botón sutil para generar carga controlada */}
+        <div className="form-footer">
+          <button
+            type="button"
+            className="btn btn-ghost subtle-btn"
+            onClick={handleGenerateControlledLoad}
+            disabled={isGeneratingLoad || isLoading}
+            title="Ejecuta una carga controlada sobre el servidor"
+          >
+            {isGeneratingLoad
+              ? "Running diagnostics..."
+              : "Run controlled diagnostics"}
+          </button>
+        </div>
       </div>
 
       {/* Tasks List */}
@@ -103,7 +141,9 @@ function App() {
           tasks.map((task) => (
             <div
               key={task.id}
-              className={`task-card ${task.status === "completada" ? "completed" : ""}`}
+              className={`task-card ${
+                task.status === "completada" ? "completed" : ""
+              }`}
             >
               <div className="task-content">
                 <label className="checkbox-container">
@@ -113,7 +153,7 @@ function App() {
                     onChange={(e) =>
                       handleStatusChange(
                         task.id,
-                        e.target.checked ? "completada" : "pendiente",
+                        e.target.checked ? "completada" : "pendiente"
                       )
                     }
                     className="checkbox-input"
@@ -124,7 +164,9 @@ function App() {
                 <div className="task-info">
                   <div className="task-title-row">
                     <h3
-                      className={`task-title ${task.status === "completada" ? "completed" : ""}`}
+                      className={`task-title ${
+                        task.status === "completada" ? "completed" : ""
+                      }`}
                     >
                       {task.title}
                     </h3>
