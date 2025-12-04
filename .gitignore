@@ -7,3 +7,4 @@ coverage/
 # env files
 .env
 .secrets
+kubeconfig.yaml

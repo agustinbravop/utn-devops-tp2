@@ -188,18 +188,124 @@ graph LR
     class PUSH dockerhub
 ```
 
+## 🏗️ Infraestructura
+
+Se utiliza Microsoft Azure para desplegar la aplicación en un cluster de Kubernetes.
+Para respetar la consigna, en lugar de utilizar Azure Kubernetes Service, vamos a instalar k3s en una máquina virtual.
+Existen recursos que se deben crear manualmente mediante la CLI de Azure:
+
+```bash
+# Previamente se debe haber instalado Azure CLI.
+# Ver: https://learn.microsoft.com/en-us/cli/azure/install-azure-cli.
+# Ejemplo: brew install azure-cli
+
+# Iniciar sesión con el correo académico y elegir la suscripción "Azure para estudiantes".
+az login
+
+# Registrarse en proveedores de Azure que "Azure para estudiantes" no da por defecto.
+export RESOURCE_GROUP="utn-devops-tp2"
+export LOCATION="eastus"
+export SERVER_VM="k3s-server"
+export AGENT_VM="k3s-agent"
+
+# Crear un Resource Group para agrupar todos los recursos a crear.
+az group create --name $RESOURCE_GROUP --location $LOCATION
+
+# Crear máquinas virtuales (un server y un agent según la arquitectura de k3s).
+az vm create \
+  --resource-group $RESOURCE_GROUP \
+  --name $SERVER_VM \
+  --image Ubuntu2404 \
+  --size Standard_B2s \
+  --admin-username azureuser \
+  --generate-ssh-keys
+az vm create \
+  --resource-group $RESOURCE_GROUP \
+  --name $AGENT_VM \
+  --image Ubuntu2404 \
+  --size Standard_B2s \
+  --admin-username azureuser \
+  --generate-ssh-keys
+
+# Abrir puertos para la API de Kubernetes y el supervisor de k3s.
+for VM in $SERVER_VM $AGENT_VM; do
+  az vm open-port --resource-group $RESOURCE_GROUP --name $VM --port 6443,10250
+done
+
+# Instalar k3s en el server (--tls-san se usa para permitir el acceso mediante la IP pública).
+SERVER_PUBLIC_IP=$(az vm show --name $SERVER_VM --resource-group $RESOURCE_GROUP --show-details --query "publicIps" --output tsv)
+az vm run-command invoke \
+    --resource-group $RESOURCE_GROUP \
+    --name $SERVER_VM \
+    --command-id RunShellScript \
+    --scripts "curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC='server --tls-san ${SERVER_PUBLIC_IP}' sh -"
+
+# Obtener el token del server (lo necesita el agent).
+K3S_TOKEN=$(az vm run-command invoke \
+    --resource-group $RESOURCE_GROUP \
+    --name $SERVER_VM \
+    --command-id RunShellScript \
+    --scripts "sudo cat /var/lib/rancher/k3s/server/node-token" \
+    --query "value[0].message" \
+    --output tsv \
+    | head -n -3 | tail -n +3) # Quedarse solo con stdout
+
+SERVER_PRIVATE_IP=$(az vm show --name $SERVER_VM --resource-group $RESOURCE_GROUP --show-details --query "privateIps" --output tsv)
+
+# Instalar k3s en el agent.
+az vm run-command invoke \
+    --resource-group $RESOURCE_GROUP \
+    --name $AGENT_VM \
+    --command-id RunShellScript \
+    --scripts "curl -sfL https://get.k3s.io | K3S_URL=https://$SERVER_PRIVATE_IP:6443 K3S_TOKEN=$K3S_TOKEN sh -"
+```
+
+Una vez creadas las máquinas virtuales e instalado k3s, necesitamos conectarnos al cluster de Kubernetes:
+
+```bash
+# Previamente se debe haber instalado `kubectl`, la CLI de Kubernetes.
+# Ver: https://kubernetes.io/docs/tasks/tools/#kubectl.
+# Ejemplo: brew install kubectl
+
+# Obtener el archivo kubeconfig del server  (asociado al superusuario admin).
+az vm run-command invoke \
+    --resource-group $RESOURCE_GROUP \
+    --name $SERVER_VM \
+    --command-id RunShellScript \
+    --scripts "sudo cat /etc/rancher/k3s/k3s.yaml | sudo base64" \
+    --query "value[0].message" \
+    --output tsv \
+    | head -n -3 \
+    | tail -n +3 \
+    | base64 --decode \
+    | sed "s/127.0.0.1/$SERVER_PUBLIC_IP/" > kubeconfig.yaml
+
+# Probar la conexión al cluster recién creado.
+export KUBECONFIG=kubeconfig.yaml
+kubectl cluster-info
+```
+
+Para eliminar todos los recursos creados:
+
+```bash
+az group delete --name $RESOURCE_GROUP --yes
+```
+
 ## ⚒️ Tareas Pendientes
 
 Esta lista NO es exhaustiva!
 
+- [x] Provisionar un cluster de Kubernetes en Microsoft Azure.
 - [ ] Corregir el despliegue continuo de la aplicación base.
 - [ ] Exponer una acción que genere carga controlada.
 - [ ] Instalar un cluster de Kubernetes con k3s.
 - [ ] Desplegar la app y Redis en Pods (utilizar un Deployment).
-- [ ] Desplegar un servicio o ingress para exponer a la web. 
+- [ ] Desplegar un servicio o ingress para exponer a la web.
 - [ ] Configurar alta disponibilidad para que se levanten nuevos nodos conforme aumenta la carga de la app.
 - [ ] Emitir logs structurados en cada servicio de la app.
 - [ ] Implementar OpenTelemetry para trazas.
 - [ ] Implementar Prometheus para métricas.
-- [ ] En las métricas, tener al menos un indicador de contenedor y un indicador de la aplicación
+- [ ] En las métricas, tener al menos un indicador de contenedor y un indicador de la aplicación.
 - [ ] Implementar Grafana para visualización con gráficos y paneles.
+- [ ] Opcional: implementar IaC con Terraform para aprovisionar un cluster de Kubernetes.
+- [ ] Opcional: agregar un servicio extra a la app para analizar trazas más interesantes.
