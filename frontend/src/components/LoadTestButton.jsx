@@ -1,21 +1,62 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3001/api";
+const TOTAL_DURATION_SECONDS = 60;
 
 const LoadTestButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [intensity, setIntensity] = useState(50);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+  const [secondsLeft, setSecondsLeft] = useState(null);
+
+  const timerRef = useRef(null);
 
   const memoryLoadMb = intensity * 5;
   const cpuIterations = intensity * 500_000;
+
+  const clearTimer = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    if (secondsLeft === null) {
+      clearTimer();
+      return;
+    }
+
+    if (secondsLeft === 0) {
+      clearTimer();
+      return;
+    }
+
+    timerRef.current = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev === null) {
+          return prev;
+        }
+        if (prev <= 1) {
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      clearTimer();
+    };
+  }, [secondsLeft]);
 
   const toggleModal = () => {
     if (isSubmitting) {
       return;
     }
+    clearTimer();
+    setSecondsLeft(null);
     setStatusMessage("");
     setIsOpen((prev) => !prev);
   };
@@ -28,10 +69,13 @@ const LoadTestButton = () => {
     try {
       await axios.post(`${API_URL}/load-test`, { intensity });
       setStatusMessage("Load test running for 60 seconds.");
+      setSecondsLeft(TOTAL_DURATION_SECONDS);
     } catch (error) {
       setStatusMessage(
         error.response?.data?.message || "Unable to start the load test.",
       );
+      setSecondsLeft(null);
+      clearTimer();
     } finally {
       setIsSubmitting(false);
     }
@@ -99,7 +143,22 @@ const LoadTestButton = () => {
             </form>
 
             {statusMessage ? (
-              <div className="load-test-status">{statusMessage}</div>
+              <div className="load-test-status">
+                <span>{statusMessage}</span>
+                {secondsLeft !== null ? (
+                  <>
+                    <span className="load-test-countdown">{secondsLeft}s</span>
+                    <div className="load-test-progress">
+                      <div
+                        className="load-test-progress-bar"
+                        style={{
+                          width: `${((TOTAL_DURATION_SECONDS - secondsLeft) / TOTAL_DURATION_SECONDS) * 100}%`,
+                        }}
+                      ></div>
+                    </div>
+                  </>
+                ) : null}
+              </div>
             ) : null}
           </div>
         </div>

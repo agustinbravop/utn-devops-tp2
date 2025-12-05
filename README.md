@@ -343,12 +343,13 @@ Esta lista NO es exhaustiva!
 
 - [x] Instalar un cluster de Kubernetes con k3s en Microsoft Azure.
 - [x] Implementar despliegue continuo de la aplicación base.
-- [ ] Exponer una acción que genere carga controlada.
+- [x] Exponer una acción que genere carga controlada.
 - [x] Desplegar los servicios en Pods (conviene utilizar un Deployment).
 - [x] Desplegar un servicio o ingress para exponer a la web.
 - [x] Configurar alta disponibilidad para que se levanten nuevos nodos conforme aumenta la carga de la app.
 - [x] Implementar Loki para logs.
 - [ ] Emitir logs structurados en cada servicio de la app.
+- [ ] Agregar logs al dashboard de la app (también agregar un panel más para la métrica http_request_duration_seconds).
 - [x] Implementar OpenTelemetry para trazas.
 - [x] Implementar Prometheus para métricas.
 - [x] Agregar una métrica que sea un indicador de la aplicación.
@@ -357,3 +358,4 @@ Esta lista NO es exhaustiva!
 - [ ] Opcional: exponer la aplicación en un dominio (evitando así la URL HTTP cruda).
 - [ ] Opcional: redesplegar servicios SOLO cuando se rebuildea su imagen. Rebuildear imágenes SOLO si cambia el código fuente de ese servicio.
 - [ ] Opcional: migrar de Promtail a Alloy (Promtail fue deprecado a inicio de año).
+- [ ] Opcional: escalado horizontal de Redis (acá habría que investigar si es suficiente el Deployment de redis).
