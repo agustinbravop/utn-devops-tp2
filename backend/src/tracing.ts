@@ -1,41 +1,56 @@
-import { NodeSDK } from "@opentelemetry/sdk-node";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
-import { resourceFromAttributes } from "@opentelemetry/resources";
-import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
-import { HttpInstrumentation } from "@opentelemetry/instrumentation-http";
-import { ExpressInstrumentation } from "@opentelemetry/instrumentation-express";
-import { RedisInstrumentation } from "@opentelemetry/instrumentation-redis-4";
-import { W3CTraceContextPropagator } from "@opentelemetry/core";
+import process from "node:process";
 
-const traceExporter = new OTLPTraceExporter({
-  url:
-    process.env.OTEL_EXPORTER_OTLP_ENDPOINT ||
-    "http://localhost:4318/v1/traces",
-});
+import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { resourceFromAttributes } from "@opentelemetry/resources";
+
+const SERVICE_NAME = "backend";
+const DEFAULT_COLLECTOR_URL = "http://localhost:4318/v1/traces";
 
 const sdk = new NodeSDK({
   resource: resourceFromAttributes({
-    [ATTR_SERVICE_NAME]: "backend",
+    "service.name": SERVICE_NAME,
   }),
-  traceExporter,
-  instrumentations: [
-    new HttpInstrumentation(),
-    new ExpressInstrumentation(),
-    new RedisInstrumentation(),
-  ],
-  textMapPropagator: new W3CTraceContextPropagator(),
+  traceExporter: new OTLPTraceExporter({
+    url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || DEFAULT_COLLECTOR_URL,
+  }),
+  instrumentations: [getNodeAutoInstrumentations()],
 });
 
-export const startTracing = () => {
-  sdk.start();
+let started = false;
 
-  process.on("SIGTERM", () => {
-    sdk
-      .shutdown()
-      .then(() => console.log("Tracing terminated"))
-      .catch((error) => console.log("Error terminating tracing", error))
-      .finally(() => process.exit(0));
-  });
+const shutdown = async () => {
+  if (!started) {
+    return;
+  }
+
+  started = false;
+
+  try {
+    await sdk.shutdown();
+  } catch (error) {
+    console.error("Failed to shutdown OpenTelemetry tracing", error);
+  }
 };
+
+export const startTracing = async () => {
+  if (started || process.env.NODE_ENV === "test") {
+    return;
+  }
+
+  try {
+    await sdk.start();
+    started = true;
+  } catch (error) {
+    console.error("Failed to start OpenTelemetry tracing", error);
+    return;
+  }
+
+  process.once("SIGTERM", shutdown);
+  process.once("SIGINT", shutdown);
+};
+
+export const stopTracing = shutdown;
 
 export default sdk;

@@ -40,9 +40,6 @@ config:
               - traceparent
               - tracestate
               - x-requested-with
-            allowed_methods:
-              - POST
-              - OPTIONS
   processors:
     memory_limiter:
       check_interval: 5s
@@ -53,7 +50,7 @@ config:
       send_batch_size: 512
   exporters:
     otlp:
-      endpoint: tempo-gateway.monitoring.svc:4317
+      endpoint: tempo.monitoring.svc.cluster.local:4317
       tls:
         insecure: true
   extensions:

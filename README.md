@@ -210,7 +210,11 @@ kubectl apply -k k8s/
 
 ### 📈 Observabilidad
 
-Se utiliza Prometheus y Grafana para observabilidad.
+En la observabilidad son fundamentales las métricas, los logs y las trazas.
+
+### Métricas
+
+Para métricas se utiliza Prometheus (que scrapea las métricas de cada servicio) y Grafana (que las visualiza en dashboards).
 En `k8s/monitoring` se definen algunos manifiestos adicionales, pero la instalación es mediante helm:
 
 ```bash
@@ -250,7 +254,27 @@ helm upgrade --install tempo grafana/tempo \
    --values k8s/monitoring/values-tempo.yaml
 ```
 
-Configurar Grafana con una nueva fuente de datos Tempo apuntando a `http://tempo.monitoring.svc:3100`. Luego, las trazas se pueden explorar directamente desde Grafana o vinculándolas con métricas existentes.
+Las trazas se pueden [explorar desde Grafana](http://20.42.47.137/grafana/a/grafana-exploretraces-app/explore?from=now-30m&to=now&timezone=browser&var-ds=tempo-main&var-primarySignal=true&var-filters=&var-metric=rate&var-groupBy=resource.service.name&var-spanListColumns=resource.service.name&var-latencyThreshold=&var-partialLatencyThreshold=&var-durationPercentiles=0.9&actionView=traceList).
+
+### Logs
+
+Para logs se utiliza Promtail (que scrapea los logs de los pods) y Loki (que los almacena).
+Luego se puede consultar estos logs desde Grafana.
+Promtail y Loki se instalan mediante `helm`:
+
+```bash
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+
+helm upgrade --install loki grafana/loki \
+  --namespace monitoring \
+  --create-namespace \
+  --values k8s/monitoring/loki-values.yaml
+
+helm upgrade --install promtail grafana/promtail \
+  --namespace monitoring \
+  --values k8s/monitoring/promtail-values.yaml
+```
 
 ## 🚀 Despliegue Continuo
 
@@ -323,12 +347,13 @@ Esta lista NO es exhaustiva!
 - [x] Desplegar los servicios en Pods (conviene utilizar un Deployment).
 - [x] Desplegar un servicio o ingress para exponer a la web.
 - [x] Configurar alta disponibilidad para que se levanten nuevos nodos conforme aumenta la carga de la app.
+- [x] Implementar Loki para logs.
 - [ ] Emitir logs structurados en cada servicio de la app.
-- [ ] Implementar OpenTelemetry para trazas.
+- [x] Implementar OpenTelemetry para trazas.
 - [x] Implementar Prometheus para métricas.
 - [x] Agregar una métrica que sea un indicador de la aplicación.
 - [x] Implementar Grafana para visualización con gráficos y paneles.
 - [ ] Opcional: implementar IaC con Terraform para aprovisionar un cluster de Kubernetes.
-- [ ] Opcional: agregar un servicio extra a la app para analizar trazas más complejas.
 - [ ] Opcional: exponer la aplicación en un dominio (evitando así la URL HTTP cruda).
 - [ ] Opcional: redesplegar servicios SOLO cuando se rebuildea su imagen. Rebuildear imágenes SOLO si cambia el código fuente de ese servicio.
+- [ ] Opcional: migrar de Promtail a Alloy (Promtail fue deprecado a inicio de año).

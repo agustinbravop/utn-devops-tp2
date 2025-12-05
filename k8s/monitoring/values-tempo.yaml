@@ -35,12 +35,20 @@ tempo:
           endpoint: 0.0.0.0:14250
   server:
     http_listen_port: 3200
-
   ingester:
     max_block_duration: 5m
-
-metricsGenerator:
-  enabled: true
+  metricsGenerator:
+    enabled: true
+    replicas: 1
+    ring:
+      kvstore:
+        store: memberlist
+    config:
+      storage:
+        path: /tmp/tempo
+      processor:
+        spanMetrics:
+          enabled: true
 
 persistence:
   enabled: true
@@ -49,16 +57,7 @@ persistence:
   storageClass: local-path
 
 gateway:
-  enabled: true
-  replicas: 1
-  autoscaling:
-    enabled: false
-  otlp:
-    enabled: true
-    grpc:
-      enabled: true
-    http:
-      enabled: true
+  enabled: false
 
 queryFrontend:
   resources:

@@ -6,8 +6,10 @@ resources:
   - ingress.yaml
   - backend-servicemonitor.yaml
   - grafana-tempo-datasource.yaml
+  - grafana-loki-datasource.yaml
   - otel-collector-http-service.yaml
   - otel-collector-ingress.yaml
+  - otel-collector-middleware.yaml
 
 generatorOptions:
   disableNameSuffixHash: true

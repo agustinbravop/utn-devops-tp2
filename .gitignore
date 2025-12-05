@@ -8,3 +8,6 @@ coverage/
 .env
 .secrets
 kubeconfig.yaml
+
+# temporary files
+redeploy.sh
