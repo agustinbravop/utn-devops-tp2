@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { trace } from "@opentelemetry/api";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3001/api";
+const API_URL = "http://localhost:3001/api";
+
+// Obtener el tracer para crear spans manuales
+const tracer = trace.getTracer("frontend-app");
 
 function App() {
   const [tasks, setTasks] = useState([]);
@@ -10,16 +14,38 @@ function App() {
 
   useEffect(() => {
     const fetchTasks = async () => {
+      // Crear un span para rastrear la carga inicial de tareas
+      const span = tracer.startSpan("fetch-tasks-on-mount");
+      
       try {
         setIsLoading(true);
+        span.setAttribute("operation", "initial-load");
+        span.setAttribute("component", "useEffect");
+        
+        console.log("Fetching tasks from:", `${API_URL}/tasks`);
         const result = await axios.get(`${API_URL}/tasks`);
+        
         setTasks(result.data.tasks);
+        
+        // Añadir atributos útiles para debugging
+        span.setAttribute("tasks.count", result.data.tasks.length);
+        span.setAttribute("success", true);
+        
+        console.log("✅ Tasks loaded:", result.data.tasks.length);
       } catch (error) {
-        console.error("Error fetching tasks:", error);
+        // Registrar el error en el span
+        span.recordException(error);
+        span.setAttribute("error", true);
+        span.setAttribute("error.message", error.message);
+        
+        console.error("❌ Error fetching tasks:", error);
       } finally {
         setIsLoading(false);
+        // Siempre finalizar el span
+        span.end();
       }
     };
+    
     fetchTasks();
   }, []);
 
@@ -27,33 +53,100 @@ function App() {
     e.preventDefault();
     if (!newTask.trim()) return;
 
+    // Crear span para la acción de crear tarea
+    const span = tracer.startSpan("create-task-action");
+    
     try {
       setIsLoading(true);
+      
+      // Añadir atributos descriptivos
+      span.setAttribute("task.title", newTask);
+      span.setAttribute("task.title.length", newTask.length);
+      span.setAttribute("user.action", "create_task");
+      span.setAttribute("component", "handleCreateTask");
+      
+      console.log("Creating task:", newTask);
       const res = await axios.post(`${API_URL}/tasks`, { title: newTask });
+      
       setTasks([...tasks, res.data.task]);
       setNewTask("");
+      
+      // Registrar éxito
+      span.setAttribute("task.id", res.data.task.id);
+      span.setAttribute("success", true);
+      
+      console.log("✅ Task created:", res.data.task);
     } catch (error) {
-      console.error("Error creating task:", error);
+      // Registrar error
+      span.recordException(error);
+      span.setAttribute("error", true);
+      span.setAttribute("error.message", error.message);
+      
+      console.error("❌ Error creating task:", error);
     } finally {
       setIsLoading(false);
+      span.end();
     }
   };
 
   const handleStatusChange = async (id, status) => {
+    // Crear span para cambio de estado
+    const span = tracer.startSpan("update-task-status");
+    
     try {
+      span.setAttribute("task.id", id);
+      span.setAttribute("task.old_status", tasks.find(t => t.id === id)?.status || "unknown");
+      span.setAttribute("task.new_status", status);
+      span.setAttribute("user.action", "toggle_status");
+      span.setAttribute("component", "handleStatusChange");
+      
+      console.log(`Updating task ${id} to status:`, status);
       const res = await axios.put(`${API_URL}/tasks/${id}`, { status });
+      
       setTasks(tasks.map((task) => (task.id === id ? res.data.task : task)));
+      
+      span.setAttribute("success", true);
+      
+      console.log("✅ Task updated:", res.data.task);
     } catch (error) {
-      console.error("Error updating task:", error);
+      span.recordException(error);
+      span.setAttribute("error", true);
+      span.setAttribute("error.message", error.message);
+      
+      console.error("❌ Error updating task:", error);
+    } finally {
+      span.end();
     }
   };
 
   const handleDeleteTask = async (id) => {
+    // Crear span para eliminación
+    const span = tracer.startSpan("delete-task-action");
+    
     try {
+      const taskToDelete = tasks.find(t => t.id === id);
+      
+      span.setAttribute("task.id", id);
+      span.setAttribute("task.title", taskToDelete?.title || "unknown");
+      span.setAttribute("user.action", "delete_task");
+      span.setAttribute("component", "handleDeleteTask");
+      
+      console.log(`Deleting task ${id}`);
       await axios.delete(`${API_URL}/tasks/${id}`);
+      
       setTasks(tasks.filter((task) => task.id !== id));
+      
+      span.setAttribute("success", true);
+      
+      console.log("✅ Task deleted:", id);
     } catch (error) {
-      console.error("Error deleting task:", error);
+      span.recordException(error);
+      span.setAttribute("error", true);
+      span.setAttribute("error.message", error.message);
+      
+      console.error("❌ Error deleting task:", error);
+    } finally {
+      span.end();
     }
   };
 
@@ -113,7 +206,7 @@ function App() {
                     onChange={(e) =>
                       handleStatusChange(
                         task.id,
-                        e.target.checked ? "completada" : "pendiente",
+                        e.target.checked ? "completada" : "pendiente"
                       )
                     }
                     className="checkbox-input"

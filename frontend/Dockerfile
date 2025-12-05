@@ -13,7 +13,7 @@ COPY package-lock.json ./
 RUN npm install
 
 # Placeholder value will be replaced at runtime in entrypoint.sh.
-ENV VITE_API_URL=__VITE_API_URL__
+ENV VITE_API_URL=VITE_API_URL
 
 RUN npm run build
 
@@ -23,7 +23,8 @@ FROM nginx:stable-alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 COPY entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+## ensure file uses Unix line endings and is executable (fixes Windows CRLF issues)
+RUN sed -i 's/\r$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
