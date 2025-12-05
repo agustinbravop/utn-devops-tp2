@@ -1,23 +1,24 @@
-import dotenv from "dotenv";
-dotenv.config();
-
 import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import Redis from "ioredis";
+import dotenv from "dotenv";
 
-type TaskStatus = "pendiente" | "completada";
+dotenv.config();
 
-const redisClient = new Redis(
-  process.env.REDIS_URL ?? "redis://localhost:6379"
-);
+let client = new Redis(process.env.REDIS_URL || "redis://localhost:6379");
 
-export const getTasks = async (_req: Request, res: Response): Promise<void> => {
+// Variable global para simular carga de memoria manteniendo las referencias
+const memoryStore: string[] = [];
+
+export const getTasks = async (_req: Request, res: Response) => {
+  const redisClient = client;
   try {
     const taskKeys = await redisClient.keys("task:*");
 
     if (taskKeys.length === 0) {
-      res.status(200).json({ message: "No se encontraron tareas.", tasks: [] });
-      return;
+      return res
+        .status(200)
+        .json({ message: "No se encontraron tareas.", tasks: [] });
     }
 
     const tasksPromises = taskKeys.map(async (key: string) => {
@@ -26,7 +27,7 @@ export const getTasks = async (_req: Request, res: Response): Promise<void> => {
       return {
         id: taskData.id,
         title: taskData.title,
-        status: taskData.status as TaskStatus,
+        status: taskData.status as "pendiente" | "completada",
       };
     });
 
@@ -35,35 +36,27 @@ export const getTasks = async (_req: Request, res: Response): Promise<void> => {
     res.status(200).json({ message: "Tareas obtenidas exitosamente.", tasks });
   } catch (error) {
     console.error("Error al obtener tareas:", error);
-    res.status(500).json({
-      message: "Error interno del servidor.",
-      error: (error as Error).message,
-    });
+    res.status(500).json({ message: "Error interno del servidor.", error });
   }
 };
 
-export const createTask = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const createTask = async (req: Request, res: Response) => {
+  const redisClient = client;
   try {
     const { title } = req.body;
 
-    if (!title || typeof title !== "string") {
-      res
+    if (!title) {
+      return res
         .status(400)
-        .json({
-          message: "El título de la tarea es requerido y debe ser texto.",
-        });
-      return;
+        .json({ message: "El título de la tarea es requerido." });
     }
 
     const taskId = uuidv4();
     const newTaskKey = `task:${taskId}`;
     const task = {
       id: taskId,
-      title: title.trim(),
-      status: "pendiente" as TaskStatus,
+      title: title,
+      status: "pendiente",
     };
 
     await redisClient.hset(newTaskKey, task);
@@ -71,35 +64,28 @@ export const createTask = async (
     res.status(201).json({ message: "Tarea creada exitosamente.", task });
   } catch (error) {
     console.error("Error al crear la tarea:", error);
-    res.status(500).json({
-      message: "Error interno del servidor.",
-      error: (error as Error).message,
-    });
+    res.status(500).json({ message: "Error interno del servidor.", error });
   }
 };
 
-export const updateTaskStatus = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const updateTaskStatus = async (req: Request, res: Response) => {
+  const redisClient = client;
   try {
     const { id } = req.params;
     const { status } = req.body;
 
-    if (status !== "pendiente" && status !== "completada") {
-      res.status(400).json({
+    if (!status || (status !== "pendiente" && status !== "completada")) {
+      return res.status(400).json({
         message:
           'El estado de la tarea es inválido. Debe ser "pendiente" o "completada".',
       });
-      return;
     }
 
     const taskKey = `task:${id}`;
 
     const taskExists = await redisClient.exists(taskKey);
     if (taskExists === 0) {
-      res.status(404).json({ message: "Tarea no encontrada." });
-      return;
+      return res.status(404).json({ message: "Tarea no encontrada." });
     }
 
     await redisClient.hset(taskKey, "status", status);
@@ -112,17 +98,12 @@ export const updateTaskStatus = async (
     });
   } catch (error) {
     console.error("Error al actualizar la tarea:", error);
-    res.status(500).json({
-      message: "Error interno del servidor.",
-      error: (error as Error).message,
-    });
+    res.status(500).json({ message: "Error interno del servidor.", error });
   }
 };
 
-export const deleteTask = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const deleteTask = async (req: Request, res: Response) => {
+  const redisClient = client;
   try {
     const { id } = req.params;
 
@@ -130,8 +111,7 @@ export const deleteTask = async (
 
     const taskExists = await redisClient.exists(taskKey);
     if (taskExists === 0) {
-      res.status(404).json({ message: "Tarea no encontrada." });
-      return;
+      return res.status(404).json({ message: "Tarea no encontrada." });
     }
 
     await redisClient.del(taskKey);
@@ -142,86 +122,77 @@ export const deleteTask = async (
     });
   } catch (error) {
     console.error("Error al eliminar la tarea:", error);
-    res.status(500).json({
-      message: "Error interno del servidor.",
-      error: (error as Error).message,
-    });
-  }
-};
-
-export const testear = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { num1, num2 } = req.body;
-
-    const a = Number(num1);
-    const b = Number(num2);
-
-    if (Number.isNaN(a) || Number.isNaN(b)) {
-      res.status(400).json({
-        message: "num1 y num2 deben ser numéricos.",
-      });
-      return;
-    }
-
-    const result = a + b;
-    res.status(200).json({ result });
-  } catch (error) {
-    console.error("Error en testear:", error);
-    res.status(500).json({
-      message: "Error interno del servidor.",
-      error: (error as Error).message,
-    });
+    res.status(500).json({ message: "Error interno del servidor.", error });
   }
 };
 
 /**
- * Genera carga controlada sobre Redis creando varias tareas "dummy".
- * Pensado para enganchar a un botón sutil en el front.
+ * Endpoint para generar carga controlada de memoria.
  *
- * - iterations: opcional en el body, número de operaciones (1–200). Default: 50.
- * - Las tareas creadas se identifican como "task:loadtest:<uuid>:<i>"
- *   y se les puede asociar un TTL para no ensuciar la DB.
+ * Body esperado:
+ * {
+ *   "iterations": number (opcional, por defecto 10, máximo 1000),
+ *   "sizeMb": number (MB por iteración, por defecto 5, máximo 50),
+ *   "action": "allocate" | "clear" (por defecto "allocate")
+ * }
+ *
+ * - action = "allocate": reserva memoria y la mantiene en memoryStore.
+ * - action = "clear": limpia memoryStore (libera referencias).
  */
-export const generateControlledLoad = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const testear = async (req: Request, res: Response) => {
   try {
-    const rawIterations = req.body?.iterations;
-    let iterations = 50;
+    const { iterations = 10, sizeMb = 5, action = "allocate" } = req.body || {};
 
-    if (typeof rawIterations === "number") {
-      iterations = Math.min(Math.max(rawIterations, 1), 200);
+    if (action === "clear") {
+      memoryStore.length = 0;
+
+      // Opcional: si Node se ejecuta con --expose-gc, intenta forzar GC
+      if (typeof global.gc === "function") {
+        try {
+          global.gc();
+        } catch {
+          // ignorar errores si no está disponible
+        }
+      }
+
+      return res.status(200).json({
+        message: "Memoria liberada exitosamente.",
+        storedChunks: memoryStore.length,
+      });
     }
 
-    const loadTestId = uuidv4();
-    const pipeline = redisClient.pipeline();
+    // Valores seguros para no matar al servidor de un solo golpe
+    const safeIterations = Math.max(1, Math.min(Number(iterations) || 0, 1000));
+    const safeSizeMb = Math.max(1, Math.min(Number(sizeMb) || 0, 50));
 
-    for (let i = 0; i < iterations; i++) {
-      const key = `task:loadtest:${loadTestId}:${i}`;
-      const task = {
-        id: `${loadTestId}-${i}`,
-        title: `Tarea de carga controlada #${i + 1}`,
-        status: "pendiente" as TaskStatus,
-      };
+    const bytes = safeSizeMb * 1024 * 1024;
 
-      pipeline.hset(key, task);
-      // Opcional: expirar estas tareas después de 10 minutos
-      pipeline.expire(key, 600);
+    for (let i = 0; i < safeIterations; i++) {
+      // Cada chunk es un string grande de tamaño aproximado "bytes"
+      const chunk = "x".repeat(bytes);
+      memoryStore.push(chunk);
     }
 
-    await pipeline.exec();
+    const totalBytes = memoryStore.reduce(
+      (acc, chunk) => acc + chunk.length,
+      0
+    );
+    const totalMb = totalBytes / (1024 * 1024);
 
-    res.status(201).json({
-      message: "Carga controlada generada exitosamente.",
-      iterations,
-      loadTestId,
+    return res.status(200).json({
+      message: "Carga de memoria ejecutada exitosamente.",
+      requested: {
+        iterations: safeIterations,
+        sizeMb: safeSizeMb,
+        action: "allocate",
+      },
+      storedChunks: memoryStore.length,
+      estimatedAllocatedMb: Number(totalMb.toFixed(2)),
     });
   } catch (error) {
-    console.error("Error al generar carga controlada:", error);
-    res.status(500).json({
-      message: "Error interno del servidor.",
-      error: (error as Error).message,
+    console.error("Error durante la prueba de carga de memoria:", error);
+    return res.status(500).json({
+      message: "Error interno durante la prueba de carga de memoria.",
     });
   }
 };
