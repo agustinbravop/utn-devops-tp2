@@ -206,6 +206,8 @@ Para desplegar todos los manifiestos en Kubernetes:
 kubectl apply -k k8s/
 ```
 
+### 📈 Observabilidad
+
 Se utiliza Prometheus y Grafana para observabilidad.
 En `k8s/monitoring` se definen algunos manifiestos adicionales, pero la instalación es mediante helm:
 
@@ -223,6 +225,10 @@ helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
 kubectl --namespace monitoring get secret monitoring-grafana -o jsonpath="{.data.admin-user}" | base64 --decode
 kubectl --namespace monitoring get secret monitoring-grafana -o jsonpath="{.data.admin-password}" | base64 --decode
 ```
+
+El backend genera dos métricas `http_requests_total` y `http_request_duration_seconds_bucket` en el endpoint `/api/metrics`.
+Estas métricas se pueden ver en un [dashboard de Grafana](http://20.42.47.137/grafana/d/app-dashboard/todo-app-observability).
+Las credenciales por defecto de grafana son usuario `admin` y contraseña `prom-operator`.
 
 ## 🚀 Despliegue Continuo
 

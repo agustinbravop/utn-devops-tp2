@@ -20,7 +20,7 @@ client.register.registerMetric(httpRequestCounter);
 client.register.registerMetric(httpRequestDuration);
 
 const metricsMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  if (req.path === "/metrics") {
+  if (req.path === "/api/metrics") {
     return next();
   }
 

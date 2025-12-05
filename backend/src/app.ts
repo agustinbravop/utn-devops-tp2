@@ -12,7 +12,8 @@ app.use(cors());
 app.use(express.json());
 app.use(metricsMiddleware);
 
-app.get("/metrics", async (_req, res) => {
+// Prometheus metrics endpoint
+app.get("/api/metrics", async (_req, res) => {
   res.set("Content-Type", client.register.contentType);
   res.end(await client.register.metrics());
 });

@@ -103,6 +103,7 @@ grafana:
       enabled: true
     dashboards:
       enabled: true
+      searchNamespace: ALL
   env:
     GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s/grafana/"
     GF_SERVER_SERVE_FROM_SUB_PATH: "true"

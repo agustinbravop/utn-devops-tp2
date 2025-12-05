@@ -4,3 +4,15 @@ namespace: monitoring
 resources:
   - namespace.yaml
   - ingress.yaml
+  - backend-servicemonitor.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+  - name: grafana-app-dashboard
+    files:
+      - app-dashboard.json
+    options:
+      labels:
+        grafana_dashboard: "1"
