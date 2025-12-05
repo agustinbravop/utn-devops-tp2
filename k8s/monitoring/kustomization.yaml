@@ -5,6 +5,7 @@ resources:
   - namespace.yaml
   - ingress.yaml
   - backend-servicemonitor.yaml
+  - grafana-tempo-datasource.yaml
 
 generatorOptions:
   disableNameSuffixHash: true

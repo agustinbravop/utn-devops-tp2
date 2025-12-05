@@ -1,0 +1,86 @@
+# Minimal Tempo override values tuned for k3s lab cluster.
+# Installs a single-replica Tempo with local persistent storage and OTLP gateway enabled.
+
+replicas: 1
+
+fullnameOverride: tempo
+nameOverride: tempo
+
+tempo:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 200m
+      memory: 512Mi
+  retention: 24h
+  storage:
+    trace:
+      backend: local
+      local:
+        path: /var/tempo/traces
+      wal:
+        path: /var/tempo/wal
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: "0.0.0.0:4317"
+        http:
+          endpoint: "0.0.0.0:4318"
+    jaeger:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:14250
+  server:
+    http_listen_port: 3200
+
+  ingester:
+    max_block_duration: 5m
+
+metricsGenerator:
+  enabled: true
+
+persistence:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 5Gi
+  storageClass: local-path
+
+gateway:
+  enabled: true
+  replicas: 1
+  autoscaling:
+    enabled: false
+  otlp:
+    enabled: true
+    grpc:
+      enabled: true
+    http:
+      enabled: true
+
+queryFrontend:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 100m
+      memory: 256Mi
+api:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 100m
+      memory: 256Mi
+compactor:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 100m
+      memory: 256Mi
