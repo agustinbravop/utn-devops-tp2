@@ -4,5 +4,5 @@ metadata:
   name: app-config
   namespace: app
 data:
-  VITE_API_URL: "http://backend.app.svc.cluster.local/api"
+  VITE_API_URL: "http://20.42.47.137/api"
   REDIS_URL: "redis://redis.app.svc.cluster.local:6379"

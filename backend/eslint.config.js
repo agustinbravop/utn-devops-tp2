@@ -5,13 +5,7 @@ import tsparser from "@typescript-eslint/parser";
 
 export default [
   {
-    ignores: [
-      "dist",
-      "node_modules",
-      "**/*.spec.ts",
-      "**/*.test.ts",
-      "coverage/**",
-    ],
+    ignores: ["dist", "node_modules", "**/*.spec.ts", "coverage/**"],
   },
   {
     files: ["**/*.ts"],

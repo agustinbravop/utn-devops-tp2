@@ -57,7 +57,7 @@ utn-devops-tp2
 └── README.md
 ```
 
-## 🧑‍💻 Desarrollo
+## 💻 Desarrollo
 
 Requisitos para levantar el proyecto:
 
@@ -73,7 +73,7 @@ Requisitos para levantar el proyecto:
 2. Construir y ejecutar la aplicación usando Docker Compose:
 
    ```bash
-   docker compose up
+   docker compose up --build
    ```
 
 3. Visitar la UI en `http://localhost:3000` y la API en `http://localhost:3001`.
@@ -132,9 +132,9 @@ az vm create \
   --admin-username azureuser \
   --generate-ssh-keys
 
-# Abrir puertos para el frontend, el redis insight, la API de Kubernetes y el supervisor de k3s.
+# Abrir puertos para web HTTP, redis insight, la API de Kubernetes y el supervisor de k3s.
 az vm open-port --resource-group $RESOURCE_GROUP --name $SERVER_VM --port 6443,10250
-az vm open-port --resource-group $RESOURCE_GROUP --name $AGENT_VM --port 30080,30540,6443,10250
+az vm open-port --resource-group $RESOURCE_GROUP --name $AGENT_VM --port 80,30540,6443,10250
 
 # Instalar k3s en el server (--tls-san se usa para permitir el acceso mediante la IP pública).
 SERVER_PUBLIC_IP=$(az vm show --name $SERVER_VM --resource-group $RESOURCE_GROUP --show-details --query "publicIps" --output tsv)
@@ -199,16 +199,43 @@ az group delete --name $RESOURCE_GROUP --yes
 
 El resto de servicios se despliegan sobre el cluster de Kubernetes, por lo que nos abstraemos de Microsoft Azure.
 Se puede acceder al cluster utilizando el archivo `kubeconfig.yaml` generado anteriormente.
+En la carpeta `/k8s/app` se definen los manifiestos de la aplicación.
+Para desplegar todos los manifiestos en Kubernetes:
 
-En el cluster se despliega la aplicación utilizando los manifiestos definidos en la carpeta `/k8s`.
-También se despliegan otros servicios, como Prometheus y Grafana.
+```bash
+kubectl apply -k k8s/
+```
+
+### 📈 Observabilidad
+
+Se utiliza Prometheus y Grafana para observabilidad.
+En `k8s/monitoring` se definen algunos manifiestos adicionales, pero la instalación es mediante helm:
+
+```bash
+# Prometheus y Grafana se instalan mediante Helm, un gestor de "paquetes" de Kubernetes.
+# Ver: https://helm.sh/docs/intro/install.
+#     brew install helm
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
+   --namespace monitoring \
+   --values k8s/monitoring/values-monitoring.yaml
+
+# Obtener usuario y contraseña de admin.
+kubectl --namespace monitoring get secret monitoring-grafana -o jsonpath="{.data.admin-user}" | base64 --decode
+kubectl --namespace monitoring get secret monitoring-grafana -o jsonpath="{.data.admin-password}" | base64 --decode
+```
+
+El backend genera dos métricas `http_requests_total` y `http_request_duration_seconds_bucket` en el endpoint `/api/metrics`.
+Estas métricas se pueden ver en un [dashboard de Grafana](http://20.42.47.137/grafana/d/app-dashboard/todo-app-observability).
+Las credenciales por defecto de grafana son usuario `admin` y contraseña `prom-operator`.
 
 ## 🚀 Despliegue Continuo
 
 Se tiene una GitHub Action para la integración continua y despliegue continuo.
 Este workflow requiere los siguientes Repository Secrets:
 
-```
+```bash
 DOCKERHUB_USERNAME
 DOCKERHUB_TOKEN
 KUBECONFIG_BASE64
@@ -273,13 +300,14 @@ Esta lista NO es exhaustiva!
 - [ ] Exponer una acción que genere carga controlada.
 - [x] Desplegar los servicios en Pods (conviene utilizar un Deployment).
 - [x] Desplegar un servicio o ingress para exponer a la web.
-- [ ] Configurar alta disponibilidad para que se levanten nuevos nodos conforme aumenta la carga de la app.
+- [x] Configurar alta disponibilidad para que se levanten nuevos nodos conforme aumenta la carga de la app.
 - [ ] Emitir logs structurados en cada servicio de la app.
 - [ ] Implementar OpenTelemetry para trazas.
-- [ ] Implementar Prometheus para métricas.
-- [ ] En las métricas, tener al menos un indicador de contenedor y un indicador de la aplicación.
-- [ ] Implementar Grafana para visualización con gráficos y paneles.
+- [x] Implementar Prometheus para métricas.
+- [x] Agregar una métrica que sea un indicador de la aplicación.
+- [x] Implementar Grafana para visualización con gráficos y paneles.
+- [ ] Opcional: implementar escalado horizontal para el redis y el front end.
 - [ ] Opcional: implementar IaC con Terraform para aprovisionar un cluster de Kubernetes.
 - [ ] Opcional: agregar un servicio extra a la app para analizar trazas más complejas.
-- [ ] Opcional: exponar la aplicación en un dominio (evitando así la URL HTTP cruda).
+- [ ] Opcional: exponer la aplicación en un dominio (evitando así la URL HTTP cruda).
 - [ ] Opcional: redesplegar servicios SOLO cuando se rebuildea su imagen. Rebuildear imágenes SOLO si cambia el código fuente de ese servicio.

@@ -18,7 +18,7 @@ spec:
       containers:
         - name: backend
           image: agustinbravop/utn-devops-tp2-backend:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always # Para descargar la nueva versión al hacer `k rollout restart`
           ports:
             - containerPort: 80
           env:
@@ -46,5 +46,5 @@ spec:
               cpu: "100m"
               memory: "128Mi"
             limits:
-              cpu: "500m"
+              cpu: "200m"
               memory: "256Mi"

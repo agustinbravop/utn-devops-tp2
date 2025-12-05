@@ -40,4 +40,18 @@ describe("Todo API Basic Tests", () => {
       expect(response.status).not.toBe(404);
     });
   });
+
+  describe("Prometheus metrics", () => {
+    it("should expose request count and duration metrics", async () => {
+      await request(app).get("/api/tasks");
+      const metricsResponse = await request(app).get("/api/metrics");
+
+      expect(metricsResponse.status).toBe(200);
+      expect(metricsResponse.headers["content-type"]).toContain("text/plain");
+      expect(metricsResponse.text).toContain("http_requests_total");
+      expect(metricsResponse.text).toContain(
+        "http_request_duration_seconds_bucket",
+      );
+    });
+  });
 });

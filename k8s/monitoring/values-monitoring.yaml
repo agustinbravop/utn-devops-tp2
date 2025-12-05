@@ -1,0 +1,113 @@
+# Helm values overriding kube-prometheus-stack defaults for a small k3s cluster.
+# Focus on essential components, tight retention, and small persistent volumes.
+
+fullnameOverride: monitoring
+nameOverride: monitoring
+
+# Disable control plane targets that are not accessible in managed k3s
+kubeEtcd:
+  enabled: false
+
+kubeControllerManager:
+  enabled: false
+
+kubeScheduler:
+  enabled: false
+
+kubeProxy:
+  enabled: false
+
+kubeApiServer:
+  enabled: false
+
+# Keep kube-state-metrics but constrain resources
+kube-state-metrics:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 100Mi
+    limits:
+      cpu: 200m
+      memory: 200Mi
+
+# Keep node exporter lean
+prometheus-node-exporter:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 150m
+      memory: 128Mi
+
+# Alertmanager disabled for now to save RAM
+alertmanager:
+  enabled: false
+
+prometheusOperator:
+  resources:
+    requests:
+      cpu: 150m
+      memory: 200Mi
+    limits:
+      cpu: 250m
+      memory: 350Mi
+
+prometheus:
+  enabled: true
+  service:
+    type: ClusterIP
+  prometheusSpec:
+    replicas: 1
+    scrapeInterval: 60s
+    evaluationInterval: 60s
+    retention: 24h
+    retentionSize: 5GB
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 400m
+        memory: 1Gi
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          storageClassName: local-path
+          resources:
+            requests:
+              storage: 5Gi
+
+# Grafana persistent storage kept small, with Prometheus as default datasource
+grafana:
+  enabled: true
+  adminPassword: prom-operator
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 3000
+  persistence:
+    enabled: true
+    storageClassName: local-path
+    size: 2Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 200Mi
+    limits:
+      cpu: 250m
+      memory: 400Mi
+  sidecar:
+    datasources:
+      enabled: true
+    dashboards:
+      enabled: true
+      searchNamespace: ALL
+  env:
+    GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s/grafana/"
+    GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+  grafana.ini:
+    server:
+      root_url: "%(protocol)s://%(domain)s/grafana/"
+      serve_from_sub_path: true

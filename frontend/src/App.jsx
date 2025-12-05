@@ -19,8 +19,6 @@ function App() {
   const [newTask, setNewTask] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingLoad, setIsGeneratingLoad] = useState(false);
-  // "more" = próxima acción mete más carga, "less" = próxima acción mete menos carga
-  const [loadMode, setLoadMode] = useState("more");
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -80,36 +78,18 @@ function App() {
 
   // Botón sutil: genera carga controlada en el backend
   const handleGenerateControlledLoad = async () => {
-    const actionMode = loadMode; // modo de esta ejecución
-
     try {
       setIsGeneratingLoad(true);
-
-      const config =
-        actionMode === "more" ? MORE_LOAD_CONFIG : LESS_LOAD_CONFIG;
-
-      await axios.post(`${API_URL}/test`, {
-        iterations: config.iterations,
-        sizeMb: config.sizeMb,
-        action: "allocate",
+      await axios.post(`${API_URL}/tasks/generate-load`, {
+        iterations: 50,
       });
-
-      // Alternamos el modo para el próximo click
-      setLoadMode((prev) => (prev === "more" ? "less" : "more"));
+      // Intencionalmente no recargamos tareas para no “ensuciar” la UI
     } catch (error) {
       console.error("Error generating controlled load:", error);
     } finally {
       setIsGeneratingLoad(false);
     }
   };
-
-  const buttonLabel = isGeneratingLoad
-    ? loadMode === "more"
-      ? "Metiendo más carga..."
-      : "Metiendo menos carga..."
-    : loadMode === "more"
-    ? "Meter más carga"
-    : "Meter menos carga";
 
   return (
     <div className="app">
@@ -137,6 +117,19 @@ function App() {
             {isLoading ? "Adding..." : "Add Task"}
           </button>
         </form>
+
+        {/* Botón sutil para generar carga controlada */}
+        <div className="form-footer">
+          <button
+            type="button"
+            className="btn btn-ghost subtle-btn"
+            onClick={handleGenerateControlledLoad}
+            disabled={isGeneratingLoad || isLoading}
+            title="Ejecuta una carga controlada sobre el servidor"
+          >
+            {isGeneratingLoad ? "Running load test..." : "Run load test"}
+          </button>
+        </div>
       </div>
 
       {/* Tasks List */}
