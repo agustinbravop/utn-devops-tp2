@@ -11,9 +11,11 @@ Bienvenido al repositorio del trabajo práctico 2 del cursado 2025 de DevOps, re
 
 Links relevantes:
 
-- [Sitio web](http://20.42.47.137:30080).
-- [Repositorio](https://github.com/agustinbravop/utn-devops-tp2).
 - [Consigna](https://docs.google.com/document/d/17rKVSd9DzsR-YAgXfACUqy_Jh-U3UC44XM7zMcwFb14/edit?tab=t.0).
+- [Repositorio](https://github.com/agustinbravop/utn-devops-tp2).
+- [Sitio web](http://20.42.47.137).
+- [Dashboard de la App](http://20.42.47.137/grafana/d/app-dashboard/todo-app-observability).
+- [Trazas](http://20.42.47.137/grafana/a/grafana-exploretraces-app/explore?from=now-30m&to=now&timezone=browser&var-ds=tempo-main&var-primarySignal=true&var-filters=&var-metric=rate&var-groupBy=resource.service.name&var-latencyThreshold=&var-partialLatencyThreshold=&var-durationPercentiles=0.9&actionView=traceList&var-spanListColumns=resource.service.name).
 
 ## ✨ Aplicación: Lista de Tareas
 
@@ -207,6 +209,43 @@ Para desplegar todos los manifiestos en Kubernetes:
 
 ```bash
 kubectl apply -k k8s/
+```
+
+Archivos:
+
+```yaml
+k8s/
+├── app/
+│   ├── backend-deployment.yaml        # Deploys backend API
+│   ├── backend-hpa.yaml               # Horizontal scaling for backend based on CPU/memory
+│   ├── backend-service.yaml           # Exposes backend on port 80
+│   ├── configmap.yaml                 # Environment variables
+│   ├── frontend-deployment.yaml       # Deploys frontend React SPA on nginx
+│   ├── frontend-service.yaml          # Exposes frontend
+│   ├── ingress.yaml                   # Routes traffic to frontend (/) and backend (/api)
+│   ├── kustomization.yaml
+│   ├── namespace.yaml
+│   ├── redis-deployment.yaml          # Deploys Redis cache
+│   ├── redis-insight-deployment.yaml  # Deploys Redis Insight GUI
+│   ├── redis-insight-service.yaml     # Exposes Redis Insight
+│   └── redis-service.yaml             # Exposes Redis
+├── kustomization.yaml
+└── monitoring/
+    ├── app-dashboard.json             # Grafana custom dashboard for the app
+    ├── backend-servicemonitor.yaml    # Prometheus ServiceMonitor for backend metrics
+    ├── grafana-loki-datasource.yaml   # Datasource config for Loki logs
+    ├── grafana-tempo-datasource.yaml  # Datasource config for Tempo traces
+    ├── ingress.yaml                   # Ingress for Grafana UI at /grafana
+    ├── kustomization.yaml
+    ├── loki-values.yaml               # Helm values for Loki log aggregation
+    ├── namespace.yaml
+    ├── otel-collector-http-service.yaml   # Exposes OpenTelemetry Collector HTTP endpoint
+    ├── otel-collector-ingress.yaml    # Ingress for OTLP traces at /otel endpoint
+    ├── otel-collector-middleware.yaml # Traefik middleware to strip /otel prefix
+    ├── promtail-values.yaml           # Helm values for Promtail log shipping
+    ├── values-monitoring.yaml         # Helm values for Prometheus/Grafana stack
+    ├── values-otel-collector.yaml     # Helm values for OpenTelemetry Collector
+    └── values-tempo.yaml              # Helm values for Tempo distributed tracing
 ```
 
 ### 📈 Observabilidad
