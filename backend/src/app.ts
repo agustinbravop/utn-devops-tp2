@@ -7,7 +7,9 @@ import taskRoutes from "./routes/todoRoutes";
 import dotenv from "dotenv";
 import client from "prom-client";
 import metricsMiddleware from "./middleware/metricsMiddleware";
+import loggingMiddleware from "./middleware/loggingMiddleware";
 import { trace } from "@opentelemetry/api";
+import logger from "./logger";
 
 const app = express();
 const tracer = trace.getTracer("backend");
@@ -15,6 +17,7 @@ const tracer = trace.getTracer("backend");
 // Middlewares.
 app.use(cors());
 app.use(express.json());
+app.use(loggingMiddleware);
 
 // Middleware para añadir información de traza a cada request.
 app.use((req, _res, next) => {
@@ -23,6 +26,9 @@ app.use((req, _res, next) => {
     span.setAttribute("http.route", req.path);
     span.setAttribute("http.method", req.method);
     span.setAttribute("app.name", "backend");
+    if (req.headers["x-request-id"]) {
+      span.setAttribute("http.request_id", String(req.headers["x-request-id"]));
+    }
   }
   next();
 });
@@ -45,6 +51,9 @@ app.get("/api/health", (_req, res) => {
       timestamp: new Date().toISOString(),
       service: "task-manager-backend",
     });
+  } catch (error) {
+    logger.error({ err: error }, "Health check failed");
+    throw error;
   } finally {
     span.end();
   }

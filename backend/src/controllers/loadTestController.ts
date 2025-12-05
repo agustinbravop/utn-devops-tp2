@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { Worker } from "node:worker_threads";
+import logger from "../logger";
 
 const DEFAULT_INTENSITY = 50;
 const MAX_INTENSITY = 100;
@@ -71,13 +72,14 @@ const spinWorker = (intensity: number) => {
   worker.unref();
 
   worker.on("error", (error) => {
-    console.error("Load test worker error", error);
+    logger.error({ err: error, intensity }, "Load test worker error");
   });
 };
 
 export const triggerLoadTest = (req: Request, res: Response) => {
   const intensity = clampIntensity(req.body?.intensity);
 
+  logger.info({ body: req.body, intensity }, "Triggering load test");
   spinWorker(intensity);
 
   res.status(202).json({

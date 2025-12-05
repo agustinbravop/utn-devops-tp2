@@ -93,6 +93,7 @@ Se pueden definir las siguientes variables de entorno:
   REDIS_URL=redis://localhost:6379
   PORT=80
   OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318/v1/traces
+  LOG_LEVEL=info
   ```
 
 ## 🏗️ Infraestructura
@@ -348,8 +349,8 @@ Esta lista NO es exhaustiva!
 - [x] Desplegar un servicio o ingress para exponer a la web.
 - [x] Configurar alta disponibilidad para que se levanten nuevos nodos conforme aumenta la carga de la app.
 - [x] Implementar Loki para logs.
-- [ ] Emitir logs structurados en cada servicio de la app.
-- [ ] Agregar logs al dashboard de la app (también agregar un panel más para la métrica http_request_duration_seconds).
+- [x] Emitir logs structurados en cada servicio de la app.
+- [x] Agregar logs al dashboard de la app (también agregar un panel más para la métrica http_request_duration_seconds).
 - [x] Implementar OpenTelemetry para trazas.
 - [x] Implementar Prometheus para métricas.
 - [x] Agregar una métrica que sea un indicador de la aplicación.

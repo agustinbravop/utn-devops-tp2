@@ -9,9 +9,10 @@ COPY tsconfig.json ./
 
 RUN npm install
 
-ENV REDIS_HOST=redis
-ENV REDIS_PORT=6379
+ENV REDIS_URL=redis://localhost:6379
 ENV PORT=80
+ENV OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318/v1/traces
+ENV LOG_LEVEL=info
 
 RUN npm run build
 

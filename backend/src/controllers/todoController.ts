@@ -2,7 +2,13 @@ import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import Redis from "ioredis";
 
+import logger from "../logger";
+
 let client = new Redis(process.env.REDIS_URL || "redis://localhost:6379");
+
+export const setRedisClient = (redis: Redis) => {
+  client = redis;
+};
 
 export const getTasks = async (_req: Request, res: Response) => {
   const redisClient = client;
@@ -29,7 +35,7 @@ export const getTasks = async (_req: Request, res: Response) => {
 
     res.status(200).json({ message: "Tareas obtenidas exitosamente.", tasks });
   } catch (error) {
-    console.error("Error al obtener tareas:", error);
+    logger.error({ err: error }, "Error al obtener tareas");
     res.status(500).json({ message: "Error interno del servidor.", error });
   }
 };
@@ -57,7 +63,7 @@ export const createTask = async (req: Request, res: Response) => {
 
     res.status(201).json({ message: "Tarea creada exitosamente.", task });
   } catch (error) {
-    console.error("Error al crear la tarea:", error);
+    logger.error({ err: error, body: req.body }, "Error al crear la tarea");
     res.status(500).json({ message: "Error interno del servidor.", error });
   }
 };
@@ -91,7 +97,10 @@ export const updateTaskStatus = async (req: Request, res: Response) => {
       task: updatedTask,
     });
   } catch (error) {
-    console.error("Error al actualizar la tarea:", error);
+    logger.error(
+      { err: error, params: req.params },
+      "Error al actualizar la tarea",
+    );
     res.status(500).json({ message: "Error interno del servidor.", error });
   }
 };
@@ -115,7 +124,10 @@ export const deleteTask = async (req: Request, res: Response) => {
       taskId: id,
     });
   } catch (error) {
-    console.error("Error al eliminar la tarea:", error);
+    logger.error(
+      { err: error, params: req.params },
+      "Error al eliminar la tarea",
+    );
     res.status(500).json({ message: "Error interno del servidor.", error });
   }
 };
@@ -126,7 +138,7 @@ export const testear = async (req: Request, res: Response) => {
     const result = num1 + num2;
     res.status(200).json(result);
   } catch (error) {
-    console.log(error);
+    logger.error({ err: error, body: req.body }, "Error en testear");
     return res.status(500).json({ message: error });
   }
 };
