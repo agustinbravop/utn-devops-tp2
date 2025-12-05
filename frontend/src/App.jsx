@@ -3,17 +3,6 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3001/api";
 
-// Configuración de carga (podés ajustar estos valores o pasarlos por env)
-const MORE_LOAD_CONFIG = {
-  iterations: Number(import.meta.env.VITE_LOAD_MORE_ITERATIONS ?? 200),
-  sizeMb: Number(import.meta.env.VITE_LOAD_MORE_SIZE_MB ?? 10),
-};
-
-const LESS_LOAD_CONFIG = {
-  iterations: Number(import.meta.env.VITE_LOAD_LESS_ITERATIONS ?? 20),
-  sizeMb: Number(import.meta.env.VITE_LOAD_LESS_SIZE_MB ?? 5),
-};
-
 function App() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
@@ -61,7 +50,7 @@ function App() {
       const res = await axios.put(`${API_URL}/tasks/${id}`, { status });
       if (res.data?.task) {
         setTasks((prev) =>
-          prev.map((task) => (task.id === id ? res.data.task : task))
+          prev.map((task) => (task.id === id ? res.data.task : task)),
         );
       }
     } catch (error) {
@@ -169,7 +158,7 @@ function App() {
                     onChange={(e) =>
                       handleStatusChange(
                         task.id,
-                        e.target.checked ? "completada" : "pendiente"
+                        e.target.checked ? "completada" : "pendiente",
                       )
                     }
                     className="checkbox-input"
@@ -212,9 +201,7 @@ function App() {
           onClick={handleGenerateControlledLoad}
           disabled={isGeneratingLoad || isLoading}
           title="Ejecuta una carga controlada sobre el servidor (más o menos carga según el modo actual)"
-        >
-          {buttonLabel}
-        </button>
+        ></button>
       </div>
     </div>
   );

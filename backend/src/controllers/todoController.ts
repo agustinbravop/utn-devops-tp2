@@ -1,9 +1,6 @@
 import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import Redis from "ioredis";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 type TaskStatus = "pendiente" | "completada";
 
@@ -36,7 +33,10 @@ export const getTasks = async (_req: Request, res: Response) => {
     console.error("Error al obtener tareas:", error);
     res.status(500).json({
       message: "Error interno del servidor.",
-      error: (error as Error).message,
+      error:
+        error instanceof Error
+          ? { message: error.message }
+          : { message: String(error) },
     });
   }
 };
@@ -45,9 +45,16 @@ export const createTask = async (req: Request, res: Response) => {
   try {
     const { title } = req.body;
 
-    if (!title || typeof title !== "string") {
+    if (typeof title !== "string") {
       return res.status(400).json({
-        message: "El título de la tarea es requerido y debe ser texto.",
+        message: "El título de la tarea es requerido.",
+      });
+    }
+
+    const trimmedTitle = title.trim();
+    if (trimmedTitle.length === 0) {
+      return res.status(400).json({
+        message: "El título de la tarea es requerido.",
       });
     }
 
@@ -55,7 +62,7 @@ export const createTask = async (req: Request, res: Response) => {
     const newTaskKey = `task:${taskId}`;
     const task = {
       id: taskId,
-      title: title.trim(),
+      title: trimmedTitle,
       status: "pendiente" as TaskStatus,
     };
 
@@ -66,7 +73,10 @@ export const createTask = async (req: Request, res: Response) => {
     console.error("Error al crear la tarea:", error);
     res.status(500).json({
       message: "Error interno del servidor.",
-      error: (error as Error).message,
+      error:
+        error instanceof Error
+          ? { message: error.message }
+          : { message: String(error) },
     });
   }
 };
@@ -103,7 +113,10 @@ export const updateTaskStatus = async (req: Request, res: Response) => {
     console.error("Error al actualizar la tarea:", error);
     res.status(500).json({
       message: "Error interno del servidor.",
-      error: (error as Error).message,
+      error:
+        error instanceof Error
+          ? { message: error.message }
+          : { message: String(error) },
     });
   }
 };
@@ -129,7 +142,10 @@ export const deleteTask = async (req: Request, res: Response) => {
     console.error("Error al eliminar la tarea:", error);
     res.status(500).json({
       message: "Error interno del servidor.",
-      error: (error as Error).message,
+      error:
+        error instanceof Error
+          ? { message: error.message }
+          : { message: String(error) },
     });
   }
 };
@@ -154,19 +170,21 @@ export const testear = async (req: Request, res: Response) => {
     const a = Number(num1);
     const b = Number(num2);
 
-    if (Number.isNaN(a) || Number.isNaN(b)) {
-      return res.status(400).json({
-        message: "num1 y num2 deben ser numéricos.",
-      });
+    if (!Number.isNaN(a) && !Number.isNaN(b)) {
+      const result = a + b;
+      return res.status(200).json(result);
     }
 
-    const result = a + b;
-    res.status(200).json({ result });
+    const concatenatedResult = `${num1 ?? ""}${num2 ?? ""}`;
+    res.status(200).json(concatenatedResult);
   } catch (error) {
     console.error("Error en testear:", error);
     res.status(500).json({
       message: "Error interno del servidor.",
-      error: (error as Error).message,
+      error:
+        error instanceof Error
+          ? { message: error.message }
+          : { message: String(error) },
     });
   }
 };
