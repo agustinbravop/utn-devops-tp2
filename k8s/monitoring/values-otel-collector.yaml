@@ -31,6 +31,18 @@ config:
           endpoint: 0.0.0.0:4317
         http:
           endpoint: 0.0.0.0:4318
+          cors:
+            allowed_origins:
+              - http://20.42.47.137
+            allowed_headers:
+              - Content-Type
+              - User-Agent
+              - traceparent
+              - tracestate
+              - x-requested-with
+            allowed_methods:
+              - POST
+              - OPTIONS
   processors:
     memory_limiter:
       check_interval: 5s

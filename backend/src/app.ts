@@ -3,23 +3,15 @@ startTracing();
 
 import express from "express";
 import taskRoutes from "./routes/todoRoutes";
-import cors from "cors";
 import dotenv from "dotenv";
 import client from "prom-client";
 import metricsMiddleware from "./middleware/metricsMiddleware";
 import { trace } from "@opentelemetry/api";
 
 const app = express();
-const tracer = trace.getTracer("backend-service");
+const tracer = trace.getTracer("backend");
 
 // Middlewares.
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    credentials: true,
-    exposedHeaders: ["traceparent", "tracestate"],
-  }),
-);
 app.use(express.json());
 
 // Middleware para añadir información de traza a cada request.
@@ -28,7 +20,7 @@ app.use((req, res, next) => {
   if (span) {
     span.setAttribute("http.route", req.path);
     span.setAttribute("http.method", req.method);
-    span.setAttribute("app.name", "backend-service");
+    span.setAttribute("app.name", "backend");
   }
   next();
 });
@@ -42,7 +34,7 @@ app.get("/api/metrics", async (_req, res) => {
 });
 
 // Health check endpoint con tracing.
-app.get("/api/health", (req, res) => {
+app.get("/api/health", (_req, res) => {
   const span = tracer.startSpan("health-check");
   try {
     span.setAttribute("health.status", "ok");

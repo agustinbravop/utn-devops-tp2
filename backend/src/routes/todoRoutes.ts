@@ -15,7 +15,7 @@ import {
 } from "../controllers/todoController";
 
 const router = Router();
-const tracer = trace.getTracer("backend-service");
+const tracer = trace.getTracer("backend");
 
 // Middleware para envolver controladores con tracing
 const withTracing = (

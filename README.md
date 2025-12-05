@@ -84,6 +84,7 @@ Se pueden definir las siguientes variables de entorno:
 
   ```
   VITE_API_URL=http://localhost:3001/api
+  VITE_OTEL_ENDPOINT=http://localhost:4318/v1/traces
   ```
 
 - `backend/.env`:
@@ -91,6 +92,7 @@ Se pueden definir las siguientes variables de entorno:
   ```
   REDIS_URL=redis://localhost:6379
   PORT=80
+  OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318/v1/traces
   ```
 
 ## 🏗️ Infraestructura

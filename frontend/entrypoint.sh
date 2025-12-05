@@ -6,9 +6,11 @@
 # To avoid it, we can use placeholder values in those variables and then replace them at runtime.
 
 VITE_API_URL="${VITE_API_URL:-http://backend.app.svc.cluster.local/api}"
+VITE_OTEL_ENDPOINT="${VITE_OTEL_ENDPOINT:-http://localhost:4318/v1/traces}"
 
 # Replace placeholder values with current environment variable values.
 find /usr/share/nginx/html -type f -exec sed -i "s|__VITE_API_URL__|${VITE_API_URL}|g" {} +
+find /usr/share/nginx/html -type f -exec sed -i "s|__VITE_OTEL_ENDPOINT__|${VITE_OTEL_ENDPOINT}|g" {} +
 
 # Start the main process (nginx).
 exec "$@"

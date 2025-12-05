@@ -146,6 +146,6 @@ jobs:
       - name: Rollout restart deployments
         run: |
           kubectl -n app rollout restart deployment backend
-          kubectl -n app rollout status deployment backend
           kubectl -n app rollout restart deployment frontend
+          kubectl -n app rollout status deployment backend
           kubectl -n app rollout status deployment frontend

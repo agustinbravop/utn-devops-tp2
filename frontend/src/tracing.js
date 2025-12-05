@@ -12,7 +12,7 @@ import { W3CTraceContextPropagator } from "@opentelemetry/core";
 export const initTracing = () => {
   const provider = new WebTracerProvider({
     resource: resourceFromAttributes({
-      [ATTR_SERVICE_NAME]: "frontend-app",
+      [ATTR_SERVICE_NAME]: "frontend",
     }),
   });
 

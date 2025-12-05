@@ -5,7 +5,7 @@ import { trace } from "@opentelemetry/api";
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3001/api";
 
 // Obtener el tracer para crear spans manuales.
-const tracer = trace.getTracer("frontend-app");
+const tracer = trace.getTracer("frontend");
 
 function App() {
   const [tasks, setTasks] = useState([]);

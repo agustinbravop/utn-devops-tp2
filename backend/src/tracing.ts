@@ -15,7 +15,7 @@ const traceExporter = new OTLPTraceExporter({
 
 const sdk = new NodeSDK({
   resource: resourceFromAttributes({
-    [ATTR_SERVICE_NAME]: process.env.OTEL_SERVICE_NAME || "backend-service",
+    [ATTR_SERVICE_NAME]: "backend",
   }),
   traceExporter,
   instrumentations: [

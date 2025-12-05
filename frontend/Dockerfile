@@ -12,8 +12,9 @@ COPY package-lock.json ./
 
 RUN npm install
 
-# Placeholder value will be replaced at runtime in entrypoint.sh.
+# Placeholder values will be replaced at runtime in entrypoint.sh.
 ENV VITE_API_URL=__VITE_API_URL__
+ENV VITE_OTEL_ENDPOINT=__VITE_OTEL_ENDPOINT__
 
 RUN npm run build
 
