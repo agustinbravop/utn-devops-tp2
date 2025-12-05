@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { trace } from "@opentelemetry/api";
+import LoadTestButton from "./components/LoadTestButton";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3001/api";
 
@@ -229,6 +230,8 @@ function App() {
           ))
         )}
       </div>
+
+      <LoadTestButton />
     </div>
   );
 }

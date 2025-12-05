@@ -13,15 +13,15 @@ import {
   deleteTask,
   testear,
 } from "../controllers/todoController";
+import { triggerLoadTest } from "../controllers/loadTestController";
 
 const router = Router();
 const tracer = trace.getTracer("backend");
 
-// Middleware para envolver controladores con tracing
+// Middleware para envolver controladores con tracing.
 const withTracing = (
   operationName: string,
-  // Accept controllers that return any Promise (e.g. Promise<Response>)
-  controller: (req: Request, res: Response) => Promise<unknown>,
+  controller: (req: Request, res: Response) => Promise<unknown> | unknown,
 ): RequestHandler => {
   return async (req: Request, res: Response, next: NextFunction) => {
     const span = tracer.startSpan(operationName);
@@ -44,6 +44,9 @@ const withTracing = (
         }
         if (req.body.status) {
           span.setAttribute("task.status", req.body.status);
+        }
+        if (req.body.intensity) {
+          span.setAttribute("load.intensity", Number(req.body.intensity));
         }
       }
 
@@ -82,5 +85,6 @@ router.post("/tasks", withTracing("create-task", createTask));
 router.put("/tasks/:id", withTracing("update-task-status", updateTaskStatus));
 router.delete("/tasks/:id", withTracing("delete-task", deleteTask));
 router.post("/test", withTracing("test-endpoint", testear));
+router.post("/load-test", withTracing("run-load-test", triggerLoadTest));
 
 export default router;

@@ -642,6 +642,128 @@ body::before {
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
+/* Load test button */
+.load-test-fab {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  border-radius: 999px;
+  padding: 0.85rem 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 999;
+}
+
+.load-test-fab:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.load-test-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1000;
+}
+
+.load-test-modal {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 2rem;
+  width: min(420px, 100%);
+  box-shadow:
+    0 25px 50px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  backdrop-filter: blur(25px);
+}
+
+.load-test-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.load-test-description {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.load-test-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.load-test-label {
+  font-weight: 600;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.load-test-form input[type="range"] {
+  width: 100%;
+  accent-color: #22c55e;
+}
+
+.load-test-start {
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+}
+
+.load-test-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.9rem;
+}
+
+.load-test-helper {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.load-test-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.load-test-close {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.load-test-close:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .app {
@@ -665,5 +787,10 @@ body::before {
   .task-controls {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .load-test-fab {
+    bottom: 1.5rem;
+    right: 1.5rem;
   }
 }

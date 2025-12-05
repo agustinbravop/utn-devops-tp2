@@ -2,6 +2,7 @@ import { startTracing } from "./tracing";
 startTracing();
 
 import express from "express";
+import cors from "cors";
 import taskRoutes from "./routes/todoRoutes";
 import dotenv from "dotenv";
 import client from "prom-client";
@@ -12,10 +13,11 @@ const app = express();
 const tracer = trace.getTracer("backend");
 
 // Middlewares.
+app.use(cors());
 app.use(express.json());
 
 // Middleware para añadir información de traza a cada request.
-app.use((req, res, next) => {
+app.use((req, _res, next) => {
   const span = trace.getActiveSpan();
   if (span) {
     span.setAttribute("http.route", req.path);
