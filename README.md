@@ -14,7 +14,7 @@ Links relevantes:
 - [Consigna](https://docs.google.com/document/d/17rKVSd9DzsR-YAgXfACUqy_Jh-U3UC44XM7zMcwFb14/edit?tab=t.0).
 - [Repositorio](https://github.com/agustinbravop/utn-devops-tp2).
 - [Sitio web](http://20.42.47.137).
-- [Dashboard de la App](http://20.42.47.137/grafana/d/app-dashboard/todo-app-observability).
+- [Dashboard de la App](http://20.42.47.137/grafana/d/app-dashboard/todo-app-observability) (usuario `admin` y clave `prom-operator`).
 - [Trazas](http://20.42.47.137/grafana/a/grafana-exploretraces-app/explore?from=now-30m&to=now&timezone=browser&var-ds=tempo-main&var-primarySignal=true&var-filters=&var-metric=rate&var-groupBy=resource.service.name&var-latencyThreshold=&var-partialLatencyThreshold=&var-durationPercentiles=0.9&actionView=traceList&var-spanListColumns=resource.service.name).
 
 ## ✨ Aplicación: Lista de Tareas
@@ -55,6 +55,7 @@ utn-devops-tp2
 │   │   └── index.jsx
 │   ├── package.json
 │   └── Dockerfile
+├── k8s              # Manifiestos para el cluster k3s
 ├── docker-compose.yml
 └── README.md
 ```
