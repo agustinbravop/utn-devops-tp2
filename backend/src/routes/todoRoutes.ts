@@ -1,5 +1,11 @@
-import { Router, Request, Response, NextFunction, RequestHandler } from "express";
-import { trace, SpanStatusCode, Span } from "@opentelemetry/api";
+import {
+  Router,
+  Request,
+  Response,
+  NextFunction,
+  RequestHandler,
+} from "express";
+import { trace, SpanStatusCode } from "@opentelemetry/api";
 import {
   getTasks,
   createTask,
@@ -15,7 +21,7 @@ const tracer = trace.getTracer("backend-service");
 const withTracing = (
   operationName: string,
   // Accept controllers that return any Promise (e.g. Promise<Response>)
-  controller: (req: Request, res: Response) => Promise<unknown>
+  controller: (req: Request, res: Response) => Promise<unknown>,
 ): RequestHandler => {
   return async (req: Request, res: Response, next: NextFunction) => {
     const span = tracer.startSpan(operationName);
@@ -53,7 +59,6 @@ const withTracing = (
       } else {
         span.setStatus({ code: SpanStatusCode.ERROR });
       }
-
     } catch (error) {
       // Registrar el error en el span
       span.recordException(error as Error);

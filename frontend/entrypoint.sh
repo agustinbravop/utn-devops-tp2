@@ -8,7 +8,7 @@
 VITE_API_URL="${VITE_API_URL:-http://backend.app.svc.cluster.local/api}"
 
 # Replace placeholder values with current environment variable values.
-find /usr/share/nginx/html -type f -exec sed -i "s|_VITE_API_URL_|${VITE_API_URL}|g" {} +
+find /usr/share/nginx/html -type f -exec sed -i "s|__VITE_API_URL__|${VITE_API_URL}|g" {} +
 
 # Start the main process (nginx).
 exec "$@"

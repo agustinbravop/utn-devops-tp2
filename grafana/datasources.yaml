@@ -11,8 +11,8 @@ datasources:
     jsonData:
       httpMethod: GET
       tracesToLogs:
-        datasourceUid: 'loki'
+        datasourceUid: "loki"
       serviceMap:
-        datasourceUid: 'prometheus'
+        datasourceUid: "prometheus"
       nodeGraph:
         enabled: true
