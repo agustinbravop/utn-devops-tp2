@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-tempo-datasource
+  namespace: monitoring
+  labels:
+    grafana_datasource: "1"
+    app.kubernetes.io/name: tempo
+    app.kubernetes.io/part-of: observability
+    app.kubernetes.io/component: tracing
+  annotations:
+    grafana_ini_section: datasources
+    grafana_datasource_uid: tempo-main
+    grafana_datasource_version: "1"
+data:
+  tempo-datasource.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Tempo
+        uid: tempo-main
+        type: tempo
+        access: proxy
+        url: http://tempo.monitoring.svc:3200
+        isDefault: false
+        editable: false
+        jsonData:
+          # tracesToLogs:
+          #   datasourceUid: loki
+          #   tags: ["service.name", "http.method", "http.status_code"]
+          #   mappedTags: ["service.name", "span.name"]
+          # tracesToMetrics:
+          #   datasourceUid: prometheus
+          #   tags: ["service.name"]
+          #   spanStartTimeShift: "1m"
+          #   spanEndTimeShift: "1m"
+          #   queries:
+          #     - name: Requests
+          #       query: sum(rate(http_requests_total[$__interval])) by (service)
+          serviceMap:
+            datasourceUid: prometheus
+          nodeGraph:
+            enabled: true
+        secureJsonData: {}

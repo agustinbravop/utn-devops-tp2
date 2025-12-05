@@ -230,6 +230,26 @@ El backend genera dos métricas `http_requests_total` y `http_request_duration_s
 Estas métricas se pueden ver en un [dashboard de Grafana](http://20.42.47.137/grafana/d/app-dashboard/todo-app-observability).
 Las credenciales por defecto de grafana son usuario `admin` y contraseña `prom-operator`.
 
+### Trazas
+
+Las trazas se capturan con OpenTelemetry Collector y se almacenan en Tempo.
+Ambos servicios se instalan con `helm`:
+
+```bash
+helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
+helm repo update
+
+helm upgrade --install otel-collector open-telemetry/opentelemetry-collector \
+   --namespace monitoring \
+   --values k8s/monitoring/values-otel-collector.yaml
+
+helm upgrade --install tempo grafana/tempo \
+   --namespace monitoring \
+   --values k8s/monitoring/values-tempo.yaml
+```
+
+Configurar Grafana con una nueva fuente de datos Tempo apuntando a `http://tempo.monitoring.svc:3100`. Luego, las trazas se pueden explorar directamente desde Grafana o vinculándolas con métricas existentes.
+
 ## 🚀 Despliegue Continuo
 
 Se tiene una GitHub Action para la integración continua y despliegue continuo.

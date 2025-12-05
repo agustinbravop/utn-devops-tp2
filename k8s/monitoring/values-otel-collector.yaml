@@ -1,0 +1,65 @@
+# Minimal OpenTelemetry Collector values for k3s lab cluster.
+# Deploys a single collector receiving OTLP traffic and exporting to Tempo.
+
+mode: deployment
+
+nameOverride: otel-collector
+fullnameOverride: otel-collector
+
+image:
+  repository: otel/opentelemetry-collector-k8s
+  tag: 0.102.0
+  pullPolicy: IfNotPresent
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 150m
+    memory: 256Mi
+
+service:
+  type: ClusterIP
+  annotations: {}
+
+config:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+  processors:
+    memory_limiter:
+      check_interval: 5s
+      limit_percentage: 70
+      spike_limit_percentage: 10
+    batch:
+      timeout: 5s
+      send_batch_size: 512
+  exporters:
+    otlp:
+      endpoint: tempo-gateway.monitoring.svc:4317
+      tls:
+        insecure: true
+  extensions:
+    health_check:
+      endpoint: ${env:MY_POD_IP}:13133
+  service:
+    telemetry:
+      metrics:
+        readers:
+          - pull:
+              exporter:
+                prometheus:
+                  host: ${env:MY_POD_IP}
+                  port: 8889
+    extensions:
+      - health_check
+    pipelines:
+      traces:
+        receivers: [otlp]
+        processors: [memory_limiter, batch]
+        exporters: [otlp]
