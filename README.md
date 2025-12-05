@@ -73,7 +73,7 @@ Requisitos para levantar el proyecto:
 2. Construir y ejecutar la aplicación usando Docker Compose:
 
    ```bash
-   docker compose up
+   docker compose up --build
    ```
 
 3. Visitar la UI en `http://localhost:3000` y la API en `http://localhost:3001`.
@@ -306,6 +306,7 @@ Esta lista NO es exhaustiva!
 - [x] Implementar Prometheus para métricas.
 - [x] Agregar una métrica que sea un indicador de la aplicación.
 - [x] Implementar Grafana para visualización con gráficos y paneles.
+- [ ] Opcional: implementar escalado horizontal para el redis y el front end.
 - [ ] Opcional: implementar IaC con Terraform para aprovisionar un cluster de Kubernetes.
 - [ ] Opcional: agregar un servicio extra a la app para analizar trazas más complejas.
 - [ ] Opcional: exponer la aplicación en un dominio (evitando así la URL HTTP cruda).

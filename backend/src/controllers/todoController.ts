@@ -1,27 +1,23 @@
-import dotenv from "dotenv";
-dotenv.config();
-
 import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import Redis from "ioredis";
 
 type TaskStatus = "pendiente" | "completada";
 
-const redisClient = new Redis(
-  process.env.REDIS_URL ?? "redis://localhost:6379"
-);
+const client = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
 
-export const getTasks = async (_req: Request, res: Response): Promise<void> => {
+export const getTasks = async (_req: Request, res: Response) => {
   try {
-    const taskKeys = await redisClient.keys("task:*");
+    const taskKeys = await client.keys("task:*");
 
     if (taskKeys.length === 0) {
-      res.status(200).json({ message: "No se encontraron tareas.", tasks: [] });
-      return;
+      return res
+        .status(200)
+        .json({ message: "No se encontraron tareas.", tasks: [] });
     }
 
     const tasksPromises = taskKeys.map(async (key: string) => {
-      const taskData = await redisClient.hgetall(key);
+      const taskData = await client.hgetall(key);
 
       return {
         id: taskData.id,
@@ -42,20 +38,14 @@ export const getTasks = async (_req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const createTask = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const createTask = async (req: Request, res: Response) => {
   try {
     const { title } = req.body;
 
     if (!title || typeof title !== "string") {
-      res
-        .status(400)
-        .json({
-          message: "El título de la tarea es requerido y debe ser texto.",
-        });
-      return;
+      return res.status(400).json({
+        message: "El título de la tarea es requerido y debe ser texto.",
+      });
     }
 
     const taskId = uuidv4();
@@ -66,7 +56,7 @@ export const createTask = async (
       status: "pendiente" as TaskStatus,
     };
 
-    await redisClient.hset(newTaskKey, task);
+    await client.hset(newTaskKey, task);
 
     res.status(201).json({ message: "Tarea creada exitosamente.", task });
   } catch (error) {
@@ -78,33 +68,29 @@ export const createTask = async (
   }
 };
 
-export const updateTaskStatus = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const updateTaskStatus = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
 
     if (status !== "pendiente" && status !== "completada") {
-      res.status(400).json({
+      return res.status(400).json({
         message:
           'El estado de la tarea es inválido. Debe ser "pendiente" o "completada".',
       });
-      return;
     }
 
     const taskKey = `task:${id}`;
 
-    const taskExists = await redisClient.exists(taskKey);
+    const taskExists = await client.exists(taskKey);
     if (taskExists === 0) {
       res.status(404).json({ message: "Tarea no encontrada." });
       return;
     }
 
-    await redisClient.hset(taskKey, "status", status);
+    await client.hset(taskKey, "status", status);
 
-    const updatedTask = await redisClient.hgetall(taskKey);
+    const updatedTask = await client.hgetall(taskKey);
 
     res.status(200).json({
       message: "Estado de la tarea actualizado exitosamente.",
@@ -119,22 +105,18 @@ export const updateTaskStatus = async (
   }
 };
 
-export const deleteTask = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const deleteTask = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
     const taskKey = `task:${id}`;
 
-    const taskExists = await redisClient.exists(taskKey);
+    const taskExists = await client.exists(taskKey);
     if (taskExists === 0) {
-      res.status(404).json({ message: "Tarea no encontrada." });
-      return;
+      return res.status(404).json({ message: "Tarea no encontrada." });
     }
 
-    await redisClient.del(taskKey);
+    await client.del(taskKey);
 
     res.status(200).json({
       message: "Tarea eliminada exitosamente.",
@@ -149,7 +131,7 @@ export const deleteTask = async (
   }
 };
 
-export const testear = async (req: Request, res: Response): Promise<void> => {
+export const testear = async (req: Request, res: Response) => {
   try {
     const { num1, num2 } = req.body;
 
@@ -157,10 +139,9 @@ export const testear = async (req: Request, res: Response): Promise<void> => {
     const b = Number(num2);
 
     if (Number.isNaN(a) || Number.isNaN(b)) {
-      res.status(400).json({
+      return res.status(400).json({
         message: "num1 y num2 deben ser numéricos.",
       });
-      return;
     }
 
     const result = a + b;
@@ -182,10 +163,7 @@ export const testear = async (req: Request, res: Response): Promise<void> => {
  * - Las tareas creadas se identifican como "task:loadtest:<uuid>:<i>"
  *   y se les puede asociar un TTL para no ensuciar la DB.
  */
-export const generateControlledLoad = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const generateControlledLoad = async (req: Request, res: Response) => {
   try {
     const rawIterations = req.body?.iterations;
     let iterations = 50;
@@ -195,7 +173,7 @@ export const generateControlledLoad = async (
     }
 
     const loadTestId = uuidv4();
-    const pipeline = redisClient.pipeline();
+    const pipeline = client.pipeline();
 
     for (let i = 0; i < iterations; i++) {
       const key = `task:loadtest:${loadTestId}:${i}`;

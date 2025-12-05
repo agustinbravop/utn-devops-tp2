@@ -48,7 +48,7 @@ function App() {
       const res = await axios.put(`${API_URL}/tasks/${id}`, { status });
       if (res.data?.task) {
         setTasks((prev) =>
-          prev.map((task) => (task.id === id ? res.data.task : task))
+          prev.map((task) => (task.id === id ? res.data.task : task)),
         );
       }
     } catch (error) {
@@ -116,9 +116,7 @@ function App() {
             disabled={isGeneratingLoad || isLoading}
             title="Ejecuta una carga controlada sobre el servidor"
           >
-            {isGeneratingLoad
-              ? "Running diagnostics..."
-              : "Run controlled diagnostics"}
+            {isGeneratingLoad ? "Running load test..." : "Run load test"}
           </button>
         </div>
       </div>
@@ -153,7 +151,7 @@ function App() {
                     onChange={(e) =>
                       handleStatusChange(
                         task.id,
-                        e.target.checked ? "completada" : "pendiente"
+                        e.target.checked ? "completada" : "pendiente",
                       )
                     }
                     className="checkbox-input"
