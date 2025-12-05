@@ -529,6 +529,5 @@
   "timepicker": {},
   "timezone": "browser",
   "title": "Todo App Observability",
-  "uid": "app-dashboard",
-  "version": 45
+  "uid": "app-dashboard"
 }

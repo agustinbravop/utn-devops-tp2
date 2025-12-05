@@ -25,6 +25,8 @@ Construimos una simple _todo application_ con los siguientes componentes:
 - Un servidor desarrollado con TypeScript y Express.js.
 - Una base de datos Redis.
 
+![App](docs/app.png)
+
 La aplicación permite ver la lista de tareas, crear tareas nuevas y actualizar o eliminar tareas existentes.
 Su arquitectura de software es la siguiente:
 
@@ -195,6 +197,8 @@ export KUBECONFIG=kubeconfig.yaml
 kubectl get nodes
 ```
 
+![Portal de Azure](docs/azure-portal.png)
+
 Para eliminar todos los recursos creados:
 
 ```bash
@@ -276,6 +280,8 @@ kubectl --namespace monitoring get secret monitoring-grafana -o jsonpath="{.data
 El backend genera dos métricas `http_requests_total` y `http_request_duration_seconds_bucket` en el endpoint `/api/metrics`.
 Estas métricas se pueden ver en un [dashboard de Grafana](http://20.42.47.137/grafana/d/app-dashboard/todo-app-observability).
 Las credenciales por defecto de grafana son usuario `admin` y contraseña `prom-operator`.
+
+![Dashboard de Grafana](docs/grafana-dashboard.png)
 
 ### Trazas
 
