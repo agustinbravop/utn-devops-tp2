@@ -6,12 +6,23 @@
 }
 
 body {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "Roboto",
+    "Oxygen",
+    "Ubuntu",
+    "Cantarell",
+    "Fira Sans",
+    "Droid Sans",
+    "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(
+  background:
+    linear-gradient(
       135deg,
       rgba(34, 197, 94, 0.1) 0%,
       rgba(16, 185, 129, 0.1) 100%
@@ -33,7 +44,8 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(
+  background:
+    radial-gradient(
       circle at 30% 70%,
       rgba(34, 197, 94, 0.1) 0%,
       transparent 60%
@@ -126,7 +138,8 @@ body::before {
   color: #ffffff;
   font-size: 0.9rem;
   font-weight: 500;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1),
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   position: relative;
   overflow: hidden;
@@ -176,7 +189,8 @@ body::before {
   border-radius: 20px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15),
+  box-shadow:
+    0 25px 50px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   position: relative;
   overflow: hidden;
@@ -277,7 +291,8 @@ body::before {
   color: #ffffff;
   transition: all 0.4s ease;
   font-weight: 400;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1),
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
@@ -289,7 +304,9 @@ body::before {
 .input:focus {
   outline: none;
   border-color: rgba(59, 130, 246, 0.5);
-  box-shadow: 0 0 30px rgba(59, 130, 246, 0.2), 0 8px 32px rgba(0, 0, 0, 0.15),
+  box-shadow:
+    0 0 30px rgba(59, 130, 246, 0.2),
+    0 8px 32px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
   background: rgba(255, 255, 255, 0.12);
   transform: translateY(-2px);
@@ -364,13 +381,17 @@ body::before {
   background: rgba(34, 197, 94, 0.2);
   color: white;
   border: 1px solid rgba(34, 197, 94, 0.4);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1), 0 0 20px rgba(34, 197, 94, 0.3),
+  box-shadow:
+    0 15px 35px rgba(0, 0, 0, 0.1),
+    0 0 20px rgba(34, 197, 94, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15), 0 0 30px rgba(34, 197, 94, 0.5),
+  box-shadow:
+    0 20px 45px rgba(0, 0, 0, 0.15),
+    0 0 30px rgba(34, 197, 94, 0.5),
     inset 0 1px 0 rgba(255, 255, 255, 0.25);
   background: rgba(34, 197, 94, 0.3);
   border-color: rgba(34, 197, 94, 0.6);
@@ -391,7 +412,8 @@ body::before {
   background: rgba(255, 255, 255, 0.04);
   color: rgba(255, 255, 255, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15),
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
@@ -400,7 +422,8 @@ body::before {
   color: #ecfdf5;
   border-color: rgba(16, 185, 129, 0.5);
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(16, 185, 129, 0.25),
+  box-shadow:
+    0 12px 30px rgba(16, 185, 129, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 
@@ -585,20 +608,23 @@ body::before {
   border-radius: 6px;
   position: relative;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1),
+  box-shadow:
+    0 4px 15px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .checkbox-custom:hover {
   border-color: rgba(16, 185, 129, 0.5);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.2),
+  box-shadow:
+    0 6px 20px rgba(16, 185, 129, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .checkbox-input:checked + .checkbox-custom {
   background: rgba(16, 185, 129, 0.2);
   border-color: rgba(16, 185, 129, 0.6);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3),
+  box-shadow:
+    0 6px 20px rgba(16, 185, 129, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
