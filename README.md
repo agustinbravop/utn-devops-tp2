@@ -304,7 +304,7 @@ Esta lista NO es exhaustiva!
 - [ ] Emitir logs structurados en cada servicio de la app.
 - [ ] Implementar OpenTelemetry para trazas.
 - [x] Implementar Prometheus para métricas.
-- [ ] Agregar una métrica que sea un indicador de la aplicación.
+- [x] Agregar una métrica que sea un indicador de la aplicación.
 - [x] Implementar Grafana para visualización con gráficos y paneles.
 - [ ] Opcional: implementar IaC con Terraform para aprovisionar un cluster de Kubernetes.
 - [ ] Opcional: agregar un servicio extra a la app para analizar trazas más complejas.
